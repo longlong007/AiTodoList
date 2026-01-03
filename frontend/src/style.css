@@ -1,0 +1,140 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary: #ed760f;
+  --primary-light: #f19433;
+  --bg-dark: #1a1a2e;
+  --bg-darker: #16213e;
+  --text-light: #e7e7e7;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Noto Sans SC', 'Inter', system-ui, sans-serif;
+  background: linear-gradient(135deg, var(--bg-dark) 0%, var(--bg-darker) 100%);
+  min-height: 100vh;
+  color: var(--text-light);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(237, 118, 15, 0.4);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(237, 118, 15, 0.6);
+}
+
+/* Glass effect */
+.glass {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+}
+
+/* Importance badges */
+.importance-A { @apply bg-red-500/20 text-red-400 border-red-500/30; }
+.importance-B { @apply bg-orange-500/20 text-orange-400 border-orange-500/30; }
+.importance-C { @apply bg-yellow-500/20 text-yellow-400 border-yellow-500/30; }
+.importance-D { @apply bg-green-500/20 text-green-400 border-green-500/30; }
+
+/* Urgency badges */
+.urgency-1 { @apply bg-purple-500/20 text-purple-400; }
+.urgency-2 { @apply bg-blue-500/20 text-blue-400; }
+.urgency-3 { @apply bg-cyan-500/20 text-cyan-400; }
+.urgency-4 { @apply bg-teal-500/20 text-teal-400; }
+.urgency-5 { @apply bg-gray-500/20 text-gray-400; }
+
+/* Status colors */
+.status-pending { @apply text-yellow-400; }
+.status-in_progress { @apply text-blue-400; }
+.status-completed { @apply text-green-400; }
+.status-cancelled { @apply text-gray-400; }
+
+/* Button styles */
+.btn-primary {
+  @apply bg-gradient-to-r from-primary-500 to-primary-600 text-white font-medium py-2 px-6 rounded-xl;
+  @apply hover:from-primary-600 hover:to-primary-700 transition-all duration-300;
+  @apply shadow-lg shadow-primary-500/25 hover:shadow-primary-500/40;
+}
+
+.btn-secondary {
+  @apply bg-white/10 text-white font-medium py-2 px-6 rounded-xl;
+  @apply hover:bg-white/20 transition-all duration-300 border border-white/10;
+}
+
+/* Input styles */
+.input-field {
+  @apply w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3;
+  @apply text-white placeholder-gray-400 focus:outline-none focus:border-primary-500/50;
+  @apply focus:ring-2 focus:ring-primary-500/20 transition-all duration-300;
+}
+
+/* Select styles */
+.select-field {
+  @apply w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3;
+  @apply text-white focus:outline-none focus:border-primary-500/50;
+  @apply focus:ring-2 focus:ring-primary-500/20 transition-all duration-300;
+  @apply cursor-pointer appearance-none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23888' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 0.75rem center;
+  background-repeat: no-repeat;
+  background-size: 1.5em 1.5em;
+}
+
+.select-field option {
+  background: #1a1a2e;
+  color: white;
+}
+
+/* Animation classes */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+.slide-enter-active,
+.slide-leave-active {
+  transition: all 0.3s ease;
+}
+
+.slide-enter-from {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+.slide-leave-to {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
