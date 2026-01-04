@@ -133,6 +133,24 @@ onMounted(() => {
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
             </svg>
             <span class="hidden sm:inline">AI分析</span>
+            <span v-if="!authStore.user?.isPro" class="text-xs bg-primary-500/20 text-primary-400 px-1.5 py-0.5 rounded">Pro</span>
+          </router-link>
+          <!-- Pro Badge or Upgrade Link -->
+          <router-link 
+            v-if="authStore.user?.isPro" 
+            to="/pricing"
+            class="flex items-center gap-1 px-2 py-1 bg-gradient-to-r from-primary-500 to-primary-600 rounded-lg text-white text-xs font-medium"
+          >
+            <span>👑</span>
+            <span>Pro</span>
+          </router-link>
+          <router-link 
+            v-else 
+            to="/pricing"
+            class="flex items-center gap-1 px-3 py-1.5 bg-gradient-to-r from-primary-500 to-primary-600 rounded-lg text-white text-xs font-medium hover:shadow-lg hover:shadow-primary-500/30 transition-all"
+          >
+            <span>✨</span>
+            <span>升级Pro</span>
           </router-link>
           <div class="flex items-center gap-2 text-gray-300">
             <span class="text-sm">{{ authStore.user?.nickname || authStore.user?.email }}</span>

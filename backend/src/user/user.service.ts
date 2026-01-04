@@ -2,7 +2,7 @@ import { Injectable, ConflictException, NotFoundException } from '@nestjs/common
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
-import { User, LoginType } from './entities/user.entity';
+import { User, LoginType, AccountType, SubscriptionStatus } from './entities/user.entity';
 
 @Injectable()
 export class UserService {
@@ -95,6 +95,38 @@ export class UserService {
 
     Object.assign(user, data);
     return this.userRepository.save(user);
+  }
+
+  // 更新订阅状态
+  async updateSubscription(userId: string, data: {
+    accountType: AccountType;
+    subscriptionStatus: SubscriptionStatus;
+    subscriptionExpireAt: Date;
+  }): Promise<User> {
+    const user = await this.findById(userId);
+    if (!user) {
+      throw new NotFoundException('用户不存在');
+    }
+
+    user.accountType = data.accountType;
+    user.subscriptionStatus = data.subscriptionStatus;
+    user.subscriptionExpireAt = data.subscriptionExpireAt;
+    
+    return this.userRepository.save(user);
+  }
+
+  // 检查用户是否是Pro会员
+  async checkProStatus(userId: string): Promise<{ isPro: boolean; expireAt?: Date }> {
+    const user = await this.findById(userId);
+    if (!user) {
+      return { isPro: false };
+    }
+
+    const isPro = user.isPro();
+    return {
+      isPro,
+      expireAt: isPro ? user.subscriptionExpireAt : undefined,
+    };
   }
 }
 

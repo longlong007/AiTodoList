@@ -1,7 +1,8 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, ForbiddenException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
 import { TodoService } from '../todo/todo.service';
+import { UserService } from '../user/user.service';
 import { Todo, TodoStatus, Importance } from '../todo/entities/todo.entity';
 
 @Injectable()
@@ -12,13 +13,34 @@ export class AiService {
   constructor(
     private configService: ConfigService,
     private todoService: TodoService,
+    private userService: UserService,
   ) {
     this.apiKey = this.configService.get('ZHIPU_API_KEY', '');
     // 添加调试日志
-    console.warn('ZHIPU_API_KEY:', this.apiKey ? `${this.apiKey.substring(0, 10)}...` : 'NOT FOUND');
+    console.log('ZHIPU_API_KEY:', this.apiKey ? `${this.apiKey.substring(0, 10)}...` : 'NOT FOUND');
+  }
+
+  // 检查用户是否有权限使用AI功能
+  async checkAiAccess(userId: string): Promise<{ hasAccess: boolean; reason?: string }> {
+    const { isPro, expireAt } = await this.userService.checkProStatus(userId);
+    
+    if (!isPro) {
+      return {
+        hasAccess: false,
+        reason: 'AI智能分析是Pro会员专属功能，请升级会员后使用。',
+      };
+    }
+    
+    return { hasAccess: true };
   }
 
   async analyzeHistory(userId: string): Promise<string> {
+    // 检查Pro权限
+    const { hasAccess, reason } = await this.checkAiAccess(userId);
+    if (!hasAccess) {
+      throw new ForbiddenException(reason);
+    }
+
     // 获取用户的历史待办事项
     const todos = await this.todoService.getHistoryForAI(userId);
     const statistics = await this.todoService.getStatistics(userId);

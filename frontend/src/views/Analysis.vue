@@ -12,18 +12,31 @@ const authStore = useAuthStore()
 const analysis = ref('')
 const loading = ref(false)
 const error = ref('')
+const needsUpgrade = ref(false)
 
 const stats = computed(() => todoStore.statistics)
+const isPro = computed(() => authStore.user?.isPro)
 
 const fetchAnalysis = async () => {
+  // 如果不是Pro用户，直接显示升级提示
+  if (!isPro.value) {
+    needsUpgrade.value = true
+    return
+  }
+
   loading.value = true
   error.value = ''
+  needsUpgrade.value = false
   
   try {
     const { data } = await aiApi.analyze()
     analysis.value = data.analysis
   } catch (err: any) {
-    error.value = err.response?.data?.message || 'AI分析服务暂时不可用'
+    if (err.response?.status === 403) {
+      needsUpgrade.value = true
+    } else {
+      error.value = err.response?.data?.message || 'AI分析服务暂时不可用'
+    }
   } finally {
     loading.value = false
   }
@@ -185,6 +198,21 @@ onMounted(async () => {
             <span class="text-lg">AI 正在分析您的待办数据...</span>
           </div>
           <p class="text-gray-500 mt-2">基于智谱 GLM-4 大模型</p>
+        </div>
+
+        <!-- Upgrade Prompt -->
+        <div v-else-if="needsUpgrade" class="text-center py-12">
+          <div class="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-primary-500/20 to-purple-500/20 rounded-full flex items-center justify-center">
+            <span class="text-4xl">👑</span>
+          </div>
+          <h3 class="text-2xl font-bold text-white mb-3">AI智能分析是Pro会员专属功能</h3>
+          <p class="text-gray-400 mb-6 max-w-md mx-auto">
+            升级Pro会员，解锁AI智能分析，获取个性化的时间管理建议，让你的效率提升更科学！
+          </p>
+          <router-link to="/pricing" class="btn-primary inline-flex items-center gap-2">
+            <span>✨</span>
+            <span>立即升级Pro</span>
+          </router-link>
         </div>
 
         <!-- Error State -->

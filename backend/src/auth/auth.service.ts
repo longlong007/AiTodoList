@@ -47,6 +47,9 @@ export class AuthService {
         nickname: user.nickname,
         avatar: user.avatar,
         loginType: user.loginType,
+        accountType: user.accountType,
+        isPro: user.isPro(),
+        subscriptionExpireAt: user.subscriptionExpireAt,
       },
     };
   }

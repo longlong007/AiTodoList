@@ -8,6 +8,17 @@ export enum LoginType {
   WECHAT = 'wechat',
 }
 
+export enum AccountType {
+  FREE = 'free',
+  PRO = 'pro',
+}
+
+export enum SubscriptionStatus {
+  ACTIVE = 'active',
+  EXPIRED = 'expired',
+  CANCELLED = 'cancelled',
+}
+
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn('uuid')
@@ -39,6 +50,26 @@ export class User {
   })
   loginType: LoginType;
 
+  // 账户类型
+  @Column({
+    type: 'enum',
+    enum: AccountType,
+    default: AccountType.FREE,
+  })
+  accountType: AccountType;
+
+  // 订阅状态
+  @Column({
+    type: 'enum',
+    enum: SubscriptionStatus,
+    default: SubscriptionStatus.EXPIRED,
+  })
+  subscriptionStatus: SubscriptionStatus;
+
+  // 订阅到期时间
+  @Column({ type: 'timestamp', nullable: true })
+  subscriptionExpireAt: Date;
+
   @OneToMany(() => Todo, (todo) => todo.user)
   todos: Todo[];
 
@@ -47,5 +78,13 @@ export class User {
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  // 检查是否是Pro用户且订阅有效
+  isPro(): boolean {
+    if (this.accountType !== AccountType.PRO) return false;
+    if (this.subscriptionStatus !== SubscriptionStatus.ACTIVE) return false;
+    if (!this.subscriptionExpireAt) return false;
+    return new Date() < new Date(this.subscriptionExpireAt);
+  }
 }
 
