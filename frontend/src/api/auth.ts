@@ -1,5 +1,5 @@
 import api from './index'
-import type { AuthResponse } from '@/types'
+import type { AuthResponse, User } from '@/types'
 
 export const authApi = {
   // 邮箱注册
@@ -21,5 +21,9 @@ export const authApi = {
   // 微信登录
   loginWithWechat: (code: string) =>
     api.post<AuthResponse>('/auth/login/wechat', { code }),
+
+  // 获取当前用户信息
+  getCurrentUser: () =>
+    api.get<User>('/user/profile'),
 }
 

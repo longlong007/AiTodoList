@@ -61,6 +61,21 @@ export const useAuthStore = defineStore('auth', () => {
     clearAuth()
   }
 
+  // 刷新用户信息（用于支付成功后更新Pro状态）
+  const refreshUser = async () => {
+    if (!token.value) return
+    
+    try {
+      const { data } = await authApi.getCurrentUser()
+      user.value = data
+      localStorage.setItem('user', JSON.stringify(data))
+      return data
+    } catch (error) {
+      console.error('刷新用户信息失败:', error)
+      throw error
+    }
+  }
+
   return {
     token,
     user,
@@ -71,6 +86,7 @@ export const useAuthStore = defineStore('auth', () => {
     registerWithEmail,
     registerWithPhone,
     logout,
+    refreshUser,
   }
 })
 

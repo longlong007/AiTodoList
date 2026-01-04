@@ -14,14 +14,19 @@ export class UserController {
       throw new NotFoundException('用户不存在');
     }
     const { password, ...result } = user;
-    return result;
+    return {
+      ...result,
+      isPro: user.isPro(),
+    };
   }
 
   @Put('profile')
   async updateProfile(@Request() req, @Body() body: { nickname?: string; avatar?: string }) {
     const user = await this.userService.updateProfile(req.user.userId, body);
     const { password, ...result } = user;
-    return result;
+    return {
+      ...result,
+      isPro: user.isPro(),
+    };
   }
 }
-

@@ -36,6 +36,25 @@ const selectPlan = (plan: Plan) => {
   showPaymentModal.value = true
 }
 
+const handlePaymentSuccess = async () => {
+  showPaymentModal.value = false
+  
+  // 刷新用户信息
+  try {
+    await authStore.refreshUser()
+    console.log('用户信息已更新，Pro状态:', authStore.user?.isPro)
+    alert('🎉 支付成功！您已成为Pro会员，正在跳转...')
+    // 跳转到待办列表页面
+    setTimeout(() => {
+      router.push('/todos')
+    }, 1000)
+  } catch (error) {
+    console.error('更新用户信息失败:', error)
+    alert('支付成功！请重新登录以更新会员状态')
+    window.location.reload()
+  }
+}
+
 const handlePay = async () => {
   if (!selectedPlan.value) return
   
@@ -44,14 +63,11 @@ const handlePay = async () => {
     const { data } = await paymentApi.createOrder(selectedPlan.value, selectedPayment.value)
     
     // 监听支付窗口的消息
-    const handleMessage = (event: MessageEvent) => {
+    const handleMessage = async (event: MessageEvent) => {
       if (event.data.type === 'payment-success') {
         console.log('收到支付成功消息:', event.data)
         window.removeEventListener('message', handleMessage)
-        showPaymentModal.value = false
-        alert('🎉 支付成功！您已成为Pro会员')
-        // 刷新页面以更新用户信息
-        window.location.reload()
+        await handlePaymentSuccess()
       } else if (event.data.type === 'payment-cancel') {
         console.log('支付已取消')
         window.removeEventListener('message', handleMessage)
@@ -103,10 +119,8 @@ const pollOrderStatus = async (orderNo: string) => {
       console.log('订单状态:', data)
       
       if (data.status === 'paid') {
-        showPaymentModal.value = false
-        alert('🎉 支付成功！您已成为Pro会员')
-        // 刷新用户信息
-        window.location.reload()
+        console.log('检测到支付成功，正在更新用户信息...')
+        await handlePaymentSuccess()
         return
       }
     } catch (e) {
