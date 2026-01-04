@@ -124,7 +124,7 @@ ${dataDescription}
       const response = await axios.post(
         this.apiUrl,
         {
-          model: 'glm-4.7',
+          model: 'glm-4-flash',
           messages: [
             {
               role: 'user',
