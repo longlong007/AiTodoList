@@ -50,17 +50,20 @@ exit /b 1
 
 :schema
 echo 正在创建表结构...
-psql -h %DB_HOST% -p %DB_PORT% -U %DB_USER% -d %DB_NAME% -f database\schema.sql
+set PGCLIENTENCODING=UTF8
+psql -h %DB_HOST% -p %DB_PORT% -U %DB_USER% -d %DB_NAME% --set=client_encoding=UTF8 -f database\schema.sql
 goto success
 
 :seed
 echo 正在导入测试数据...
-psql -h %DB_HOST% -p %DB_PORT% -U %DB_USER% -d %DB_NAME% -f database\seed.sql
+set PGCLIENTENCODING=UTF8
+psql -h %DB_HOST% -p %DB_PORT% -U %DB_USER% -d %DB_NAME% --set=client_encoding=UTF8 -f database\seed.sql
 goto success
 
 :full
 echo 正在创建表结构...
-psql -h %DB_HOST% -p %DB_PORT% -U %DB_USER% -d %DB_NAME% -f database\schema.sql
+set PGCLIENTENCODING=UTF8
+psql -h %DB_HOST% -p %DB_PORT% -U %DB_USER% -d %DB_NAME% --set=client_encoding=UTF8 -f database\schema.sql
 if %errorlevel% neq 0 (
     echo [错误] 表结构创建失败
     pause
@@ -68,9 +71,9 @@ if %errorlevel% neq 0 (
 )
 echo 表结构创建成功
 echo 正在导入测试数据...
-psql -h %DB_HOST% -p %DB_PORT% -U %DB_USER% -d %DB_NAME% -f database\seed.sql
+set PGCLIENTENCODING=UTF8
+psql -h %DB_HOST% -p %DB_PORT% -U %DB_USER% -d %DB_NAME% --set=client_encoding=UTF8 -f database\seed.sql
 goto success
-
 :success
 if %errorlevel% neq 0 (
     echo [错误] 导入失败
@@ -97,6 +100,10 @@ echo      密码: test123456
 echo.
 echo   4. 过期Pro用户
 echo      邮箱: expired@test.com
+echo      密码: test123456
+echo.
+echo   5. 中文测试用户 (Pro会员, 100条中文待办)
+echo      邮箱: chinese@test.com
 echo      密码: test123456
 echo.
 
