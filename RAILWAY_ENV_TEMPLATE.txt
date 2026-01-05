@@ -1,0 +1,17 @@
+# Railway Backend 环境变量配置
+# 复制以下内容到 Railway Backend Variables → Raw Editor
+
+DATABASE_URL=${{Postgres.DATABASE_URL}}
+NODE_ENV=production
+PORT=3000
+JWT_SECRET=e5dd8b7453029a677ad5330ff1c2e80057d92ea24ebb1b287a2786a34ed9540cffe1fa06b876779b25afe8e9f13ef512774089e05020c5c582fcff80f56991bc
+JWT_EXPIRES_IN=7d
+FRONTEND_URL=https://your-vercel-domain.vercel.app
+ZHIPU_API_KEY=
+
+# 注意事项：
+# 1. 将 FRONTEND_URL 中的 your-vercel-domain 替换为你的实际 Vercel 域名
+# 2. 如果需要 AI 功能，填入 ZHIPU_API_KEY，否则留空
+# 3. JWT_SECRET 已自动生成，可以直接使用
+# 4. 配置完成后点击 Save，Railway 会自动重新部署
+
