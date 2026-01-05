@@ -8,10 +8,10 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: todolist
-    ports:
-      - "5432:5432"
+    # ports:
+    #   - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -27,17 +27,17 @@ services:
       dockerfile: Dockerfile
     container_name: todolist-backend
     restart: unless-stopped
-    ports:
-      - "3000:3000"
+    # ports:
+    #   - "3000:3000"
     environment:
       - DB_HOST=postgres
       - DB_PORT=5432
       - DB_USERNAME=postgres
-      - DB_PASSWORD=postgres
+      - DB_PASSWORD=${DB_PASSWORD}
       - DB_DATABASE=todolist
-      - JWT_SECRET=your-super-secret-jwt-key-change-in-production
+      - JWT_SECRET=${JWT_SECRET}
       - JWT_EXPIRES_IN=7d
-      - ZHIPU_API_KEY=${ZHIPU_API_KEY:-}
+      - ZHIPU_API_KEY=${ZHIPU_API_KEY}
       - PORT=3000
     depends_on:
       postgres:
@@ -52,6 +52,7 @@ services:
     restart: unless-stopped
     ports:
       - "80:80"
+      - "443:443" # HTTPS
     depends_on:
       - backend
 
