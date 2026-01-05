@@ -1,8 +1,9 @@
 import axios from 'axios'
 
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
   timeout: 30000,
+  withCredentials: true,  // 允许携带 cookies
 })
 
 // 请求拦截器

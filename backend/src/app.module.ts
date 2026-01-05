@@ -17,20 +17,14 @@ import { PaymentModule } from './payment/payment.module';
       imports: [ConfigModule],
       useFactory: (configService: ConfigService): TypeOrmModuleOptions => {
         const databaseUrl = configService.get<string>('DATABASE_URL');
-        // 调试日志 - 查看实际读取的值
-        console.log('=== 环境变量调试 ===');
-        console.log('DATABASE_URL:', databaseUrl);
-        console.log('DATABASE_URL 来源:', process.env.DATABASE_URL ? '系统环境变量' : '.env 文件');
+        
         // 优先使用 DATABASE_URL（Railway 推荐方式）
         if (databaseUrl) {
           try {
             const url = new URL(databaseUrl);
-            console.log('数据库主机:', url.hostname);
-            console.log('数据库端口:', url.port || 5432);
             const isProduction = configService.get('NODE_ENV') === 'production';
             const dbName = url.pathname.substring(1); // 移除开头的 /
-            console.log('数据库环境:', isProduction);
-            console.log('数据库名:', dbName);
+            
             return {
               type: 'postgres',
               host: url.hostname,
