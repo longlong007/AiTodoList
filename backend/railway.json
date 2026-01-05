@@ -4,6 +4,7 @@
       "builder": "RAILPACK"
     },
     "deploy": {
+      "startCommand": "npm run start:prod",
       "runtime": "V2",
       "numReplicas": 1,
       "sleepApplication": false,
@@ -13,7 +14,6 @@
           "numReplicas": 1
         }
       },
-      "startCommand": "npm run start:prod",
       "restartPolicyType": "ON_FAILURE",
       "restartPolicyMaxRetries": 10
     }
