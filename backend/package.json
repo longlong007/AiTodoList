@@ -2,6 +2,10 @@
   "name": "todolist-backend",
   "version": "1.0.0",
   "description": "TodoList Backend with NestJS",
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
   "scripts": {
     "build": "nest build",
     "start": "nest start",
