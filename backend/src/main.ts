@@ -18,12 +18,15 @@ async function bootstrap() {
   
   app.enableCors({
     origin: (origin, callback) => {
-      // 允许配置的源或所有 Vercel 预览部署
+      // 允许配置的源、所有 Vercel 预览部署、Railway 域名、或同源请求
       if (!origin || 
           allowedOrigins.includes(origin) || 
-          /\.vercel\.app$/.test(origin)) {
+          /\.vercel\.app$/.test(origin) ||
+          /\.railway\.app$/.test(origin) ||
+          /\.up\.railway\.app$/.test(origin)) {
         callback(null, true);
       } else {
+        console.warn('⚠️ CORS blocked origin:', origin);
         callback(new Error('Not allowed by CORS'));
       }
     },
