@@ -11,15 +11,17 @@ onMounted(async () => {
   const token = route.query.token as string
   
   if (token) {
-    // 保存 token
+    // 保存 token 并更新 store
     localStorage.setItem('token', token)
     
-    // 获取用户信息
+    // 获取用户信息（这会同时更新 store 中的 token 和 user）
     try {
       await authStore.fetchCurrentUser()
       router.push('/todos')
     } catch (error) {
       console.error('Failed to fetch user info:', error)
+      // 清除可能的无效 token
+      localStorage.removeItem('token')
       router.push('/login')
     }
   } else {
