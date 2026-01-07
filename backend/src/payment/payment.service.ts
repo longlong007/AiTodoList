@@ -66,8 +66,11 @@ export class PaymentService {
       subject: `Todo Master Pro会员 - ${this.getPlanName(order.planType)}`,
     });
     
+    // 获取后端域名
+    const backendUrl = this.configService.get('BACKEND_URL') || 'http://localhost:3000';
+    
     // 模拟支付页面（实际应该是支付宝的支付页面）
-    return `/api/payment/mock-pay?${params.toString()}&method=alipay`;
+    return `${backendUrl}/api/payment/mock-pay?${params.toString()}&method=alipay`;
   }
 
   // 生成微信支付链接（模拟）
@@ -80,7 +83,10 @@ export class PaymentService {
       subject: `Todo Master Pro会员 - ${this.getPlanName(order.planType)}`,
     });
     
-    return `/api/payment/mock-pay?${params.toString()}&method=wechat`;
+    // 获取后端域名
+    const backendUrl = this.configService.get('BACKEND_URL') || 'http://localhost:3000';
+    
+    return `${backendUrl}/api/payment/mock-pay?${params.toString()}&method=wechat`;
   }
 
   // 获取套餐名称
