@@ -144,13 +144,22 @@ export class PaymentController {
         </div>
         <script>
           function pay() {
+            console.log('开始支付，订单号:', '${orderNo}');
+            
             fetch('/api/payment/mock-complete', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ orderNo: '${orderNo}' })
             })
-            .then(res => res.json())
+            .then(res => {
+              console.log('收到响应，状态码:', res.status);
+              if (!res.ok) {
+                throw new Error('HTTP error! status: ' + res.status);
+              }
+              return res.json();
+            })
             .then(data => {
+              console.log('支付结果:', data);
               if (data.success) {
                 alert('支付成功！窗口将自动关闭');
                 // 通知父窗口支付成功
@@ -162,11 +171,12 @@ export class PaymentController {
                 }, 1000);
               } else {
                 alert('支付失败：' + (data.message || '未知错误'));
+                console.error('支付失败详情:', data);
               }
             })
             .catch(err => {
               console.error('支付请求失败:', err);
-              alert('支付请求失败，请重试');
+              alert('支付请求失败：' + err.message + '\\n请检查网络连接或联系客服');
             });
           }
           function cancel() {
@@ -187,14 +197,31 @@ export class PaymentController {
   // 模拟支付完成（开发测试用）
   @Post('mock-complete')
   async mockComplete(@Body() body: { orderNo: string }) {
+    console.log('==========================================');
     console.log('收到支付完成请求:', body);
+    console.log('订单号:', body?.orderNo);
+    console.log('==========================================');
+    
     try {
+      if (!body || !body.orderNo) {
+        throw new BadRequestException('订单号不能为空');
+      }
+
       const order = await this.paymentService.mockPaymentComplete(body.orderNo);
-      console.log('支付处理成功，订单状态:', order.status);
+      console.log('✅ 支付处理成功，订单状态:', order.status);
       return { success: true, order };
     } catch (error) {
-      console.error('支付处理失败:', error.message);
-      return { success: false, message: error.message };
+      console.error('❌ 支付处理失败:', error);
+      console.error('错误详情:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      });
+      return { 
+        success: false, 
+        message: error.message || 'Internal server error',
+        error: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      };
     }
   }
 

@@ -136,26 +136,41 @@ export class PaymentService {
 
   // 模拟支付完成（用于测试）
   async mockPaymentComplete(orderNo: string): Promise<Order> {
-    const order = await this.findOrderByNo(orderNo);
-    if (!order) {
-      throw new NotFoundException('订单不存在');
-    }
-
-    if (order.status === OrderStatus.PAID) {
-      throw new BadRequestException('订单已支付');
-    }
-
-    // 模拟第三方交易号
-    const mockTradeNo = `MOCK${Date.now()}`;
-    await this.completePayment(orderNo, mockTradeNo);
-
-    // 再次查询确保订单存在
-    const updatedOrder = await this.findOrderByNo(orderNo);
-    if (!updatedOrder) {
-      throw new NotFoundException('订单处理失败');
-    }
+    console.log('📝 mockPaymentComplete 开始处理:', orderNo);
     
-    return updatedOrder;
+    try {
+      const order = await this.findOrderByNo(orderNo);
+      console.log('📋 订单查询结果:', order ? `找到订单 ${order.id}` : '订单不存在');
+      
+      if (!order) {
+        throw new NotFoundException(`订单不存在: ${orderNo}`);
+      }
+
+      console.log('💰 当前订单状态:', order.status);
+      if (order.status === OrderStatus.PAID) {
+        throw new BadRequestException('订单已支付');
+      }
+
+      // 模拟第三方交易号
+      const mockTradeNo = `MOCK${Date.now()}`;
+      console.log('🔄 开始执行支付完成流程...');
+      
+      await this.completePayment(orderNo, mockTradeNo);
+
+      // 再次查询确保订单存在
+      const updatedOrder = await this.findOrderByNo(orderNo);
+      console.log('✅ 订单更新后状态:', updatedOrder?.status);
+      
+      if (!updatedOrder) {
+        throw new NotFoundException('订单处理失败');
+      }
+      
+      console.log('🎉 支付完成处理成功');
+      return updatedOrder;
+    } catch (error) {
+      console.error('❌ mockPaymentComplete 失败:', error);
+      throw error;
+    }
   }
 
   // 完成支付，更新订单和用户状态
