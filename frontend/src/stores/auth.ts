@@ -78,18 +78,18 @@ export const useAuthStore = defineStore('auth', () => {
 
   // 获取当前用户信息（用于 OAuth 回调）
   const fetchCurrentUser = async () => {
-    // 首先从 localStorage 读取 token 并更新 store
+    // 强制从 localStorage 同步最新的 token
     const storedToken = localStorage.getItem('token')
-    if (storedToken) {
-      token.value = storedToken
-    }
-    
-    if (!token.value) {
+    if (!storedToken) {
       throw new Error('No token found')
     }
     
+    // 更新 store 中的 token（确保响应式状态正确）
+    token.value = storedToken
+    
     try {
       const { data } = await authApi.getCurrentUser()
+      // 更新用户信息
       user.value = data
       localStorage.setItem('user', JSON.stringify(data))
       return data

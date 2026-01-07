@@ -48,9 +48,17 @@ const router = createRouter({
 router.beforeEach((to, _from, next) => {
   const authStore = useAuthStore()
   
+  // OAuth 回调路由不进行认证检查，让组件内部处理
+  if (to.path === '/auth/callback') {
+    next()
+    return
+  }
+  
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
+    console.log('Router guard: not authenticated, redirecting to /login')
     next('/login')
   } else if (to.meta.guest && authStore.isAuthenticated) {
+    console.log('Router guard: already authenticated, redirecting to /todos')
     next('/todos')
   } else {
     next()

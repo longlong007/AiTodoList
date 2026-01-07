@@ -10,21 +10,27 @@ const authStore = useAuthStore()
 onMounted(async () => {
   const token = route.query.token as string
   
-  if (token) {
-    // 保存 token 并更新 store
+  if (!token) {
+    console.error('No token in callback')
+    router.push('/login')
+    return
+  }
+  
+  try {
+    // 1. 先保存 token 到 localStorage
     localStorage.setItem('token', token)
     
-    // 获取用户信息（这会同时更新 store 中的 token 和 user）
-    try {
-      await authStore.fetchCurrentUser()
-      router.push('/todos')
-    } catch (error) {
-      console.error('Failed to fetch user info:', error)
-      // 清除可能的无效 token
-      localStorage.removeItem('token')
-      router.push('/login')
-    }
-  } else {
+    // 2. 获取用户信息（内部会同步 token 到 store）
+    await authStore.fetchCurrentUser()
+    
+    // 3. 成功后跳转
+    console.log('OAuth login successful, redirecting to /todos')
+    router.push('/todos')
+  } catch (error) {
+    console.error('OAuth callback failed:', error)
+    // 清除无效 token
+    localStorage.removeItem('token')
+    localStorage.removeItem('user')
     router.push('/login')
   }
 })
