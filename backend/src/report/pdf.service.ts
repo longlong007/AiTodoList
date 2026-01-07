@@ -27,12 +27,12 @@ export class PdfService {
 
         // 加载中文字体 - 优先使用项目内的字体文件
         const projectRoot = path.resolve(__dirname, '../../');
-        const projectFontPath = path.join(projectRoot, 'src/assets/fonts/SourceHanSansCN-Regular.otf');
         
         // 字体路径列表（优先级从高到低）
         const fontPaths = [
           // 1. 项目内的字体文件（最优先）
-          projectFontPath,
+          path.join(projectRoot, 'src/assets/fonts/NotoSansSC-Regular.ttf'),
+          path.join(projectRoot, 'src/assets/fonts/SourceHanSansCN-Regular.otf'),
           // 2. Windows 系统字体
           'C:/Windows/Fonts/msyh.ttc',
           'C:/Windows/Fonts/simhei.ttf',
