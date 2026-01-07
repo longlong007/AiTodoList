@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Query, UseGuards, Request, Res } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Query, UseGuards, Request, Res, BadRequestException } from '@nestjs/common';
 import { Response } from 'express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { PaymentService } from './payment.service';
