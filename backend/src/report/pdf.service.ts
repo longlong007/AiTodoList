@@ -26,22 +26,40 @@ export class PdfService {
         doc.on('error', reject);
 
         // 加载中文字体 - 优先使用项目内的字体文件
-        // 修复路径：编译后 __dirname 指向 dist/report，需要找到项目根目录
-        const isProduction = process.env.NODE_ENV === 'production';
-        const projectRoot = isProduction 
-          ? path.resolve(__dirname, '../../../')  // dist/report -> dist -> backend
-          : path.resolve(__dirname, '../../');    // src/report -> backend
+        // 修复路径：在 Railway/Docker 环境中，工作目录可能是 / 或 /app
+        // __dirname 在编译后指向 dist/report
+        
+        // 尝试多个可能的项目根目录
+        const possibleRoots = [
+          path.resolve(__dirname, '../../../'),  // dist/report -> dist -> backend -> /
+          path.resolve(__dirname, '../../../../'), // dist/report -> dist -> backend -> / -> /
+          '/app',                                  // Railway/Docker 常见路径
+          process.cwd(),                          // 当前工作目录
+        ];
+        
+        // 找到实际的项目根目录（包含 package.json 的目录）
+        let projectRoot = __dirname;
+        for (const root of possibleRoots) {
+          if (fs.existsSync(path.join(root, 'package.json'))) {
+            projectRoot = root;
+            break;
+          }
+        }
         
         // 字体路径列表（优先级从高到低）
         const fontPaths = [
-          // 1. 项目内的字体文件（最优先）
-          // 支持多种可能的文件名
+          // 1. 编译后的路径（生产环境优先）
+          path.join(projectRoot, 'dist/src/assets/fonts/NotoSansSC-VariableFont_wght.ttf'),
+          path.join(projectRoot, 'dist/src/assets/fonts/NotoSansSC-Regular.ttf'),
+          // 2. 源代码路径（开发环境）
           path.join(projectRoot, 'src/assets/fonts/NotoSansSC-VariableFont_wght.ttf'),
           path.join(projectRoot, 'src/assets/fonts/NotoSansSC-Regular.ttf'),
           path.join(projectRoot, 'src/assets/fonts/SourceHanSansCN-Regular.otf'),
-          // 编译后的路径（生产环境）
-          path.join(projectRoot, 'dist/src/assets/fonts/NotoSansSC-VariableFont_wght.ttf'),
-          path.join(projectRoot, 'dist/src/assets/fonts/NotoSansSC-Regular.ttf'),
+          // 3. Railway/Docker 绝对路径
+          '/app/src/assets/fonts/NotoSansSC-VariableFont_wght.ttf',
+          '/app/dist/src/assets/fonts/NotoSansSC-VariableFont_wght.ttf',
+          '/app/src/assets/fonts/NotoSansSC-Regular.ttf',
+          '/app/dist/src/assets/fonts/NotoSansSC-Regular.ttf',
           // 2. Windows 系统字体
           'C:/Windows/Fonts/msyh.ttc',
           'C:/Windows/Fonts/simhei.ttf',
@@ -83,7 +101,12 @@ export class PdfService {
           console.warn('⚠️ 未找到中文字体文件，使用 Courier 字体');
           console.warn('💡 提示: 运行 "node scripts/download-chinese-font.js" 下载字体');
           console.warn('📁 当前项目根目录:', projectRoot);
-          console.warn('📁 期望的字体路径:', path.join(projectRoot, 'src/assets/fonts/NotoSansSC-VariableFont_wght.ttf'));
+          console.warn('📁 __dirname:', __dirname);
+          console.warn('📁 process.cwd():', process.cwd());
+          console.warn('📁 已检查的路径:');
+          fontPaths.forEach((p, i) => {
+            console.warn(`   ${i + 1}. ${p} ${fs.existsSync(p) ? '✅' : '❌'}`);
+          });
           doc.font('Courier');
         }
 
