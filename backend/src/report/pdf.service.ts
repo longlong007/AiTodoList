@@ -26,13 +26,22 @@ export class PdfService {
         doc.on('error', reject);
 
         // 加载中文字体 - 优先使用项目内的字体文件
-        const projectRoot = path.resolve(__dirname, '../../');
+        // 修复路径：编译后 __dirname 指向 dist/report，需要找到项目根目录
+        const isProduction = process.env.NODE_ENV === 'production';
+        const projectRoot = isProduction 
+          ? path.resolve(__dirname, '../../../')  // dist/report -> dist -> backend
+          : path.resolve(__dirname, '../../');    // src/report -> backend
         
         // 字体路径列表（优先级从高到低）
         const fontPaths = [
           // 1. 项目内的字体文件（最优先）
+          // 支持多种可能的文件名
+          path.join(projectRoot, 'src/assets/fonts/NotoSansSC-VariableFont_wght.ttf'),
           path.join(projectRoot, 'src/assets/fonts/NotoSansSC-Regular.ttf'),
           path.join(projectRoot, 'src/assets/fonts/SourceHanSansCN-Regular.otf'),
+          // 编译后的路径（生产环境）
+          path.join(projectRoot, 'dist/src/assets/fonts/NotoSansSC-VariableFont_wght.ttf'),
+          path.join(projectRoot, 'dist/src/assets/fonts/NotoSansSC-Regular.ttf'),
           // 2. Windows 系统字体
           'C:/Windows/Fonts/msyh.ttc',
           'C:/Windows/Fonts/simhei.ttf',
@@ -58,9 +67,13 @@ export class PdfService {
               fontLoaded = true;
               loadedFontPath = fontPath;
               console.log('✅ 成功加载中文字体:', fontPath);
+              console.log('📁 项目根目录:', projectRoot);
               break;
+            } else {
+              console.log('🔍 检查字体路径（不存在）:', fontPath);
             }
           } catch (error) {
+            console.warn('⚠️ 加载字体失败:', fontPath, error.message);
             // 继续尝试下一个字体
             continue;
           }
@@ -69,6 +82,8 @@ export class PdfService {
         if (!fontLoaded) {
           console.warn('⚠️ 未找到中文字体文件，使用 Courier 字体');
           console.warn('💡 提示: 运行 "node scripts/download-chinese-font.js" 下载字体');
+          console.warn('📁 当前项目根目录:', projectRoot);
+          console.warn('📁 期望的字体路径:', path.join(projectRoot, 'src/assets/fonts/NotoSansSC-VariableFont_wght.ttf'));
           doc.font('Courier');
         }
 
