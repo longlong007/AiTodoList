@@ -62,6 +62,8 @@ const handlePay = async () => {
   try {
     const { data } = await paymentApi.createOrder(selectedPlan.value, selectedPayment.value)
     
+    console.log('订单创建成功:', data)
+    
     // 监听支付窗口的消息
     const handleMessage = async (event: MessageEvent) => {
       if (event.data.type === 'payment-success') {
@@ -79,24 +81,40 @@ const handlePay = async () => {
     
     // 打开支付页面
     if (data.payUrl) {
+      console.log('正在打开支付窗口:', data.payUrl)
       const payWindow = window.open(data.payUrl, '_blank', 'width=500,height=600')
       
-      // 检测支付窗口是否被关闭
-      const checkClosed = setInterval(() => {
-        if (payWindow && payWindow.closed) {
-          clearInterval(checkClosed)
-          // 如果窗口关闭但没收到消息，开始轮询
-          setTimeout(() => {
-            pollOrderStatus(data.orderNo)
-          }, 1000)
-        }
-      }, 500)
+      // 检测弹窗是否被阻止
+      if (!payWindow || payWindow.closed || typeof payWindow.closed === 'undefined') {
+        console.warn('⚠️ 支付窗口被浏览器阻止，立即开始轮询订单状态')
+        alert('⚠️ 浏览器阻止了支付窗口弹出\n\n请点击地址栏的"允许弹出窗口"按钮，或者直接复制以下链接在新标签页打开：\n\n' + data.payUrl)
+        
+        // 立即开始轮询
+        pollOrderStatus(data.orderNo)
+      } else {
+        console.log('✓ 支付窗口已打开，监听窗口关闭事件')
+        
+        // 检测支付窗口是否被关闭
+        const checkClosed = setInterval(() => {
+          if (payWindow.closed) {
+            console.log('支付窗口已关闭')
+            clearInterval(checkClosed)
+            // 如果窗口关闭但没收到消息，开始轮询
+            setTimeout(() => {
+              console.log('开始轮询订单状态...')
+              pollOrderStatus(data.orderNo)
+            }, 1000)
+          }
+        }, 500)
+      }
     } else {
+      console.log('没有支付链接，直接开始轮询')
       // 开始轮询订单状态（备用方案）
       pollOrderStatus(data.orderNo)
     }
   } catch (error: any) {
-    alert(error.response?.data?.message || '创建订单失败')
+    console.error('创建订单失败:', error)
+    alert(error.response?.data?.message || '创建订单失败，请重试')
   } finally {
     paying.value = false
   }
