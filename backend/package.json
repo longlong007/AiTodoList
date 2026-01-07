@@ -11,7 +11,8 @@
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:prod": "node dist/main",
-    "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix"
+    "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
+    "download-font": "node scripts/download-chinese-font.js"
   },
   "dependencies": {
     "@nestjs/common": "^10.3.0",

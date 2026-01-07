@@ -25,40 +25,50 @@ export class PdfService {
         doc.on('end', () => resolve(Buffer.concat(buffers)));
         doc.on('error', reject);
 
-        // 尝试加载中文字体，如果失败则使用 Courier（对Unicode支持较好）
-        try {
-          // 尝试多个可能的中文字体路径
-          const possibleFontPaths = [
-            // Windows
-            'C:/Windows/Fonts/msyh.ttc',  // 微软雅黑
-            'C:/Windows/Fonts/simhei.ttf', // 黑体
-            'C:/Windows/Fonts/simsun.ttc', // 宋体
-            // Linux
-            '/usr/share/fonts/truetype/droid/DroidSansFallbackFull.ttf',
-            '/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc',
-            '/usr/share/fonts/truetype/wqy/wqy-microhei.ttc',
-            // macOS
-            '/System/Library/Fonts/PingFang.ttc',
-            '/Library/Fonts/Arial Unicode.ttf',
-          ];
+        // 加载中文字体 - 优先使用项目内的字体文件
+        const projectRoot = path.resolve(__dirname, '../../');
+        const projectFontPath = path.join(projectRoot, 'src/assets/fonts/SourceHanSansCN-Regular.otf');
+        
+        // 字体路径列表（优先级从高到低）
+        const fontPaths = [
+          // 1. 项目内的字体文件（最优先）
+          projectFontPath,
+          // 2. Windows 系统字体
+          'C:/Windows/Fonts/msyh.ttc',
+          'C:/Windows/Fonts/simhei.ttf',
+          'C:/Windows/Fonts/simsun.ttc',
+          // 3. Linux 系统字体
+          '/usr/share/fonts/truetype/droid/DroidSansFallbackFull.ttf',
+          '/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc',
+          '/usr/share/fonts/truetype/wqy/wqy-microhei.ttc',
+          '/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc',
+          // 4. macOS 系统字体
+          '/System/Library/Fonts/PingFang.ttc',
+          '/Library/Fonts/Arial Unicode.ttf',
+        ];
 
-          let fontLoaded = false;
-          for (const fontPath of possibleFontPaths) {
+        let fontLoaded = false;
+        let loadedFontPath = '';
+
+        for (const fontPath of fontPaths) {
+          try {
             if (fs.existsSync(fontPath)) {
               doc.registerFont('ChineseFont', fontPath);
               doc.font('ChineseFont');
               fontLoaded = true;
+              loadedFontPath = fontPath;
               console.log('✅ 成功加载中文字体:', fontPath);
               break;
             }
+          } catch (error) {
+            // 继续尝试下一个字体
+            continue;
           }
+        }
 
-          if (!fontLoaded) {
-            console.warn('⚠️ 未找到中文字体文件，使用 Courier 字体');
-            doc.font('Courier');
-          }
-        } catch (error) {
-          console.warn('⚠️ 加载中文字体失败，使用 Courier 字体:', error.message);
+        if (!fontLoaded) {
+          console.warn('⚠️ 未找到中文字体文件，使用 Courier 字体');
+          console.warn('💡 提示: 运行 "node scripts/download-chinese-font.js" 下载字体');
           doc.font('Courier');
         }
 
