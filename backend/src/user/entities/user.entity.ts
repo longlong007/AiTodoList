@@ -6,6 +6,8 @@ export enum LoginType {
   PHONE = 'phone',
   EMAIL = 'email',
   WECHAT = 'wechat',
+  GOOGLE = 'google',
+  GITHUB = 'github',
 }
 
 export enum AccountType {
@@ -32,6 +34,12 @@ export class User {
 
   @Column({ nullable: true, unique: true })
   wechatOpenId: string;
+
+  @Column({ nullable: true, unique: true })
+  googleId: string;
+
+  @Column({ nullable: true, unique: true })
+  githubId: string;
 
   @Column({ nullable: true })
   @Exclude()

@@ -23,6 +23,14 @@ export class UserService {
     return this.userRepository.findOne({ where: { wechatOpenId } });
   }
 
+  async findByGoogleId(googleId: string): Promise<User | null> {
+    return this.userRepository.findOne({ where: { googleId } });
+  }
+
+  async findByGithubId(githubId: string): Promise<User | null> {
+    return this.userRepository.findOne({ where: { githubId } });
+  }
+
   async findById(id: string): Promise<User | null> {
     return this.userRepository.findOne({ where: { id } });
   }
@@ -76,6 +84,74 @@ export class UserService {
       wechatOpenId,
       loginType: LoginType.WECHAT,
       nickname: nickname || '微信用户',
+      avatar,
+    });
+
+    return this.userRepository.save(user);
+  }
+
+  async createOrUpdateWithGoogle(googleId: string, email?: string, nickname?: string, avatar?: string): Promise<User> {
+    let user = await this.findByGoogleId(googleId);
+    
+    if (user) {
+      // 更新用户信息
+      if (email && !user.email) user.email = email;
+      if (nickname) user.nickname = nickname;
+      if (avatar) user.avatar = avatar;
+      return this.userRepository.save(user);
+    }
+
+    // 如果邮箱已存在，关联 Google ID
+    if (email) {
+      const existingUser = await this.findByEmail(email);
+      if (existingUser && !existingUser.googleId) {
+        existingUser.googleId = googleId;
+        if (nickname) existingUser.nickname = nickname;
+        if (avatar) existingUser.avatar = avatar;
+        return this.userRepository.save(existingUser);
+      }
+    }
+
+    // 创建新用户
+    user = this.userRepository.create({
+      googleId,
+      email,
+      loginType: LoginType.GOOGLE,
+      nickname: nickname || email?.split('@')[0] || 'Google用户',
+      avatar,
+    });
+
+    return this.userRepository.save(user);
+  }
+
+  async createOrUpdateWithGithub(githubId: string, email?: string, nickname?: string, avatar?: string): Promise<User> {
+    let user = await this.findByGithubId(githubId);
+    
+    if (user) {
+      // 更新用户信息
+      if (email && !user.email) user.email = email;
+      if (nickname) user.nickname = nickname;
+      if (avatar) user.avatar = avatar;
+      return this.userRepository.save(user);
+    }
+
+    // 如果邮箱已存在，关联 GitHub ID
+    if (email) {
+      const existingUser = await this.findByEmail(email);
+      if (existingUser && !existingUser.githubId) {
+        existingUser.githubId = githubId;
+        if (nickname) existingUser.nickname = nickname;
+        if (avatar) existingUser.avatar = avatar;
+        return this.userRepository.save(existingUser);
+      }
+    }
+
+    // 创建新用户
+    user = this.userRepository.create({
+      githubId,
+      email,
+      loginType: LoginType.GITHUB,
+      nickname: nickname || email?.split('@')[0] || 'GitHub用户',
       avatar,
     });
 

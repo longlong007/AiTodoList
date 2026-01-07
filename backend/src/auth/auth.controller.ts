@@ -1,6 +1,8 @@
-import { Controller, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Body, HttpCode, HttpStatus, Get, UseGuards, Req, Res } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from './auth.service';
 import { RegisterDto, LoginDto, WechatLoginDto } from './dto/auth.dto';
+import { Response } from 'express';
 
 @Controller('auth')
 export class AuthController {
@@ -32,6 +34,40 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   async loginWithWechat(@Body() dto: WechatLoginDto) {
     return this.authService.loginWithWechat(dto.code);
+  }
+
+  // Google OAuth
+  @Get('google')
+  @UseGuards(AuthGuard('google'))
+  async googleAuth() {
+    // Initiates the Google OAuth2 login flow
+  }
+
+  @Get('google/callback')
+  @UseGuards(AuthGuard('google'))
+  async googleAuthCallback(@Req() req, @Res() res: Response) {
+    const result = await this.authService.loginWithGoogle(req.user);
+    
+    // 重定向到前端，携带 token
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    res.redirect(`${frontendUrl}/auth/callback?token=${result.access_token}`);
+  }
+
+  // GitHub OAuth
+  @Get('github')
+  @UseGuards(AuthGuard('github'))
+  async githubAuth() {
+    // Initiates the GitHub OAuth2 login flow
+  }
+
+  @Get('github/callback')
+  @UseGuards(AuthGuard('github'))
+  async githubAuthCallback(@Req() req, @Res() res: Response) {
+    const result = await this.authService.loginWithGithub(req.user);
+    
+    // 重定向到前端，携带 token
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    res.redirect(`${frontendUrl}/auth/callback?token=${result.access_token}`);
   }
 }
 

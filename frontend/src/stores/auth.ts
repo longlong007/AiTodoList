@@ -76,6 +76,20 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  // 获取当前用户信息（用于 OAuth 回调）
+  const fetchCurrentUser = async () => {
+    try {
+      const { data } = await authApi.getCurrentUser()
+      user.value = data
+      localStorage.setItem('user', JSON.stringify(data))
+      return data
+    } catch (error) {
+      console.error('获取用户信息失败:', error)
+      clearAuth()
+      throw error
+    }
+  }
+
   return {
     token,
     user,
@@ -87,6 +101,7 @@ export const useAuthStore = defineStore('auth', () => {
     registerWithPhone,
     logout,
     refreshUser,
+    fetchCurrentUser,
   }
 })
 

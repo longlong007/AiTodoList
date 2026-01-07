@@ -97,6 +97,26 @@ export class AuthService {
     return this.login(user);
   }
 
+  async loginWithGoogle(googleUser: { googleId: string; email?: string; nickname?: string; avatar?: string }) {
+    const user = await this.userService.createOrUpdateWithGoogle(
+      googleUser.googleId,
+      googleUser.email,
+      googleUser.nickname,
+      googleUser.avatar,
+    );
+    return this.login(user);
+  }
+
+  async loginWithGithub(githubUser: { githubId: string; email?: string; nickname?: string; avatar?: string }) {
+    const user = await this.userService.createOrUpdateWithGithub(
+      githubUser.githubId,
+      githubUser.email,
+      githubUser.nickname,
+      githubUser.avatar,
+    );
+    return this.login(user);
+  }
+
   private isValidEmail(email: string): boolean {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
