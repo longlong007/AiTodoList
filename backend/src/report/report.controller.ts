@@ -44,6 +44,13 @@ export class ReportController {
     @Res({ passthrough: true }) res: Response,
   ) {
     const report = await this.reportService.findOne(id, req.user.userId);
+    
+    // 如果对象存储中有 PDF，返回重定向
+    if (report.pdfUrl) {
+      return res.redirect(report.pdfUrl);
+    }
+    
+    // 否则实时生成
     const pdfBuffer = await this.pdfService.generatePdf(report);
 
     res.set({
@@ -53,6 +60,21 @@ export class ReportController {
     });
 
     return new StreamableFile(pdfBuffer);
+  }
+
+  @Post(':id/generate-pdf')
+  async generatePdf(@Request() req, @Param('id') id: string) {
+    const report = await this.reportService.findOne(id, req.user.userId);
+    await this.reportService.generateAndUploadPdf(report);
+    
+    const updatedReport = await this.reportService.findOne(id, req.user.userId);
+    return { 
+      success: true, 
+      message: 'PDF 已生成并上传',
+      data: {
+        pdfUrl: updatedReport.pdfUrl,
+      },
+    };
   }
 }
 

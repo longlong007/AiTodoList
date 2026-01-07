@@ -15,6 +15,7 @@
     "download-font": "node scripts/download-chinese-font.js"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.964.0",
     "@nestjs/common": "^10.3.0",
     "@nestjs/config": "^3.1.1",
     "@nestjs/core": "^10.3.0",
@@ -24,10 +25,12 @@
     "@nestjs/typeorm": "^10.0.1",
     "@types/passport-github2": "^1.2.9",
     "@types/passport-google-oauth20": "^2.0.17",
+    "ali-oss": "^6.23.0",
     "axios": "^1.6.2",
     "bcryptjs": "^2.4.3",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.0",
+    "cos-nodejs-sdk-v5": "^2.15.4",
     "passport": "^0.7.0",
     "passport-github2": "^0.1.12",
     "passport-google-oauth20": "^2.0.0",
