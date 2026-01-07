@@ -1,37 +1,44 @@
 @echo off
-REM 添加 PDF 存储相关字段到 reports 表
-REM Windows 批处理脚本
+chcp 65001 >nul
+REM Add PDF storage fields to reports table
+REM Windows Batch Script
 
 echo ====================================
-echo 数据库迁移：添加 PDF 存储字段
+echo Database Migration: Add PDF Storage Fields
 echo ====================================
 echo.
 
-REM 检查 psql 是否可用
+REM Check if psql is available
 where psql >nul 2>nul
 if %errorlevel% neq 0 (
-    echo 错误：未找到 psql 命令
-    echo 请安装 PostgreSQL 客户端或将其添加到 PATH
+    echo ERROR: psql command not found
+    echo Please install PostgreSQL client or add it to PATH
     pause
     exit /b 1
 )
 
-echo 正在连接数据库...
+echo Connecting to database...
+echo.
+echo NOTE: If reports table does not exist, please run schema.sql first:
+echo   psql -U postgres -d todolist -f schema.sql
 echo.
 
-REM 执行迁移脚本
+REM Execute migration script
 psql -U postgres -d todolist -f add-report-pdf-fields.sql
 
 if %errorlevel% equ 0 (
     echo.
     echo ====================================
-    echo ✅ 迁移成功完成！
+    echo SUCCESS: Migration completed!
     echo ====================================
 ) else (
     echo.
     echo ====================================
-    echo ❌ 迁移失败，请查看错误信息
+    echo ERROR: Migration failed
     echo ====================================
+    echo.
+    echo If you see "relation reports does not exist", run schema.sql first:
+    echo   psql -U postgres -d todolist -f schema.sql
 )
 
 echo.

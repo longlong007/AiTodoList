@@ -141,6 +141,8 @@ CREATE TABLE "reports" (
     "title" VARCHAR NOT NULL,
     "content" TEXT NOT NULL,
     "statisticsData" TEXT,
+    "pdfUrl" VARCHAR,
+    "pdfKey" VARCHAR,
     "userId" UUID NOT NULL,
     "createdAt" TIMESTAMP NOT NULL DEFAULT NOW(),
     "updatedAt" TIMESTAMP NOT NULL DEFAULT NOW(),
