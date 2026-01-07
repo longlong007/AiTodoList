@@ -8,29 +8,27 @@ const route = useRoute()
 const authStore = useAuthStore()
 
 onMounted(async () => {
+  console.log('AuthCallback mounted, processing OAuth callback...')
   const token = route.query.token as string
   
   if (!token) {
-    console.error('No token in callback')
+    console.error('❌ No token in callback URL')
     router.push('/login')
     return
   }
   
+  console.log('✓ Token received:', token.substring(0, 20) + '...')
+  
   try {
-    // 1. 先保存 token 到 localStorage
-    localStorage.setItem('token', token)
+    // 使用 handleOAuthCallback 方法处理回调
+    await authStore.handleOAuthCallback(token)
     
-    // 2. 获取用户信息（内部会同步 token 到 store）
-    await authStore.fetchCurrentUser()
+    console.log('✓ OAuth login successful, redirecting to /todos')
     
-    // 3. 成功后跳转
-    console.log('OAuth login successful, redirecting to /todos')
-    router.push('/todos')
+    // 使用 replace 而不是 push，避免可以返回到回调页面
+    router.replace('/todos')
   } catch (error) {
-    console.error('OAuth callback failed:', error)
-    // 清除无效 token
-    localStorage.removeItem('token')
-    localStorage.removeItem('user')
+    console.error('❌ OAuth callback failed:', error)
     router.push('/login')
   }
 })

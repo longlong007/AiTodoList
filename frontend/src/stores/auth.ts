@@ -100,6 +100,37 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  // 处理 OAuth 回调（Google/GitHub 登录）
+  const handleOAuthCallback = async (accessToken: string) => {
+    try {
+      console.log('🔄 Processing OAuth callback...')
+      
+      // 1. 先设置 token（同时更新 localStorage 和 store）
+      token.value = accessToken
+      localStorage.setItem('token', accessToken)
+      
+      console.log('✓ Token saved to store and localStorage')
+      
+      // 2. 获取用户信息
+      const { data } = await authApi.getCurrentUser()
+      
+      console.log('✓ User info fetched:', data.email || data.phone)
+      
+      // 3. 更新用户信息
+      user.value = data
+      localStorage.setItem('user', JSON.stringify(data))
+      
+      console.log('✓ OAuth callback completed successfully')
+      
+      return data
+    } catch (error) {
+      console.error('❌ OAuth callback failed:', error)
+      // 清除所有认证信息
+      clearAuth()
+      throw error
+    }
+  }
+
   return {
     token,
     user,
@@ -112,6 +143,7 @@ export const useAuthStore = defineStore('auth', () => {
     logout,
     refreshUser,
     fetchCurrentUser,
+    handleOAuthCallback,
   }
 })
 
