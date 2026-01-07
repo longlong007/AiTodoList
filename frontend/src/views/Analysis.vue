@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import { useTodoStore } from '@/stores/todo'
 import { useAuthStore } from '@/stores/auth'
 import { aiApi } from '@/api/ai'
+import { reportApi, type Report } from '@/api/report'
 
 const router = useRouter()
 const todoStore = useTodoStore()
@@ -13,6 +14,11 @@ const analysis = ref('')
 const loading = ref(false)
 const error = ref('')
 const needsUpgrade = ref(false)
+const showHistoryModal = ref(false)
+const historicalReports = ref<Report[]>([])
+const loadingReports = ref(false)
+const savingReport = ref(false)
+const currentReportId = ref<string | null>(null)
 
 const stats = computed(() => todoStore.statistics)
 const isPro = computed(() => authStore.user?.isPro)
@@ -52,6 +58,105 @@ const formatAnalysis = (text: string) => {
     .replace(/\n- /g, '</p><li class="ml-4 text-gray-300">• ')
     .replace(/\n\d+\. /g, '</p><li class="ml-4 text-gray-300">')
     .replace(/---/g, '<hr class="border-white/10 my-4">')
+}
+
+const saveReport = async () => {
+  if (!analysis.value) {
+    alert('没有可保存的报告')
+    return
+  }
+
+  savingReport.value = true
+  try {
+    const title = `AI分析报告 - ${new Date().toLocaleDateString('zh-CN')}`
+    const statisticsData = JSON.stringify(stats.value)
+    
+    const { data } = await reportApi.create({
+      title,
+      content: analysis.value,
+      statisticsData,
+    })
+    
+    currentReportId.value = data.data.id
+    alert('报告保存成功！')
+  } catch (err: any) {
+    console.error('保存报告失败:', err)
+    alert(err.response?.data?.message || '保存报告失败')
+  } finally {
+    savingReport.value = false
+  }
+}
+
+const downloadPdf = async () => {
+  if (!currentReportId.value) {
+    alert('请先保存报告')
+    return
+  }
+
+  try {
+    const { data } = await reportApi.downloadPdf(currentReportId.value)
+    
+    // 创建下载链接
+    const url = window.URL.createObjectURL(new Blob([data]))
+    const link = document.createElement('a')
+    link.href = url
+    link.setAttribute('download', `report-${currentReportId.value}.pdf`)
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    window.URL.revokeObjectURL(url)
+  } catch (err: any) {
+    console.error('下载PDF失败:', err)
+    alert('下载PDF失败')
+  }
+}
+
+const fetchHistoricalReports = async () => {
+  loadingReports.value = true
+  try {
+    const { data } = await reportApi.getAll()
+    historicalReports.value = data.data
+    showHistoryModal.value = true
+  } catch (err: any) {
+    console.error('获取历史报告失败:', err)
+    alert('获取历史报告失败')
+  } finally {
+    loadingReports.value = false
+  }
+}
+
+const viewHistoricalReport = async (report: Report) => {
+  analysis.value = report.content
+  currentReportId.value = report.id
+  showHistoryModal.value = false
+  
+  // 如果有统计数据快照，也可以恢复（可选）
+  if (report.statisticsData) {
+    try {
+      // 可以在这里恢复统计数据
+      console.log('统计数据快照:', JSON.parse(report.statisticsData))
+    } catch (e) {
+      console.error('解析统计数据失败:', e)
+    }
+  }
+}
+
+const deleteReport = async (id: string) => {
+  if (!confirm('确定要删除这个报告吗？')) {
+    return
+  }
+
+  try {
+    await reportApi.delete(id)
+    historicalReports.value = historicalReports.value.filter(r => r.id !== id)
+    if (currentReportId.value === id) {
+      currentReportId.value = null
+    }
+    alert('删除成功')
+  } catch (err: any) {
+    console.error('删除报告失败:', err)
+    alert('删除报告失败')
+  }
 }
 
 const handleLogout = () => {
@@ -177,16 +282,28 @@ onMounted(async () => {
             <span class="text-2xl">🤖</span>
             AI 智能分析报告
           </h2>
-          <button
-            @click="fetchAnalysis"
-            :disabled="loading"
-            class="btn-secondary flex items-center gap-2 text-sm"
-          >
-            <svg :class="['w-4 h-4', loading && 'animate-spin']" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-            刷新分析
-          </button>
+          <div class="flex items-center gap-2">
+            <button
+              @click="fetchHistoricalReports"
+              :disabled="loadingReports"
+              class="btn-secondary flex items-center gap-2 text-sm"
+            >
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+              </svg>
+              历史报告
+            </button>
+            <button
+              @click="fetchAnalysis"
+              :disabled="loading"
+              class="btn-secondary flex items-center gap-2 text-sm"
+            >
+              <svg :class="['w-4 h-4', loading && 'animate-spin']" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              刷新分析
+            </button>
+          </div>
         </div>
 
         <!-- Loading State -->
@@ -227,8 +344,35 @@ onMounted(async () => {
         </div>
 
         <!-- Analysis Content -->
-        <div v-else class="prose prose-invert max-w-none">
-          <div class="text-gray-300 leading-relaxed" v-html="formatAnalysis(analysis)"></div>
+        <div v-else>
+          <div class="prose prose-invert max-w-none mb-6">
+            <div class="text-gray-300 leading-relaxed" v-html="formatAnalysis(analysis)"></div>
+          </div>
+          
+          <!-- Action Buttons -->
+          <div class="flex items-center gap-3 pt-4 border-t border-white/10">
+            <button
+              @click="saveReport"
+              :disabled="savingReport || !analysis"
+              class="btn-primary flex items-center gap-2"
+            >
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+              </svg>
+              {{ savingReport ? '保存中...' : '保存报告' }}
+            </button>
+            <button
+              @click="downloadPdf"
+              :disabled="!currentReportId"
+              class="btn-secondary flex items-center gap-2"
+              :title="currentReportId ? '下载PDF' : '请先保存报告'"
+            >
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              下载 PDF
+            </button>
+          </div>
         </div>
       </div>
 
@@ -237,6 +381,91 @@ onMounted(async () => {
         Powered by 智谱 GLM-4 大模型
       </div>
     </main>
+
+    <!-- Historical Reports Modal -->
+    <div v-if="showHistoryModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <!-- Backdrop -->
+      <div 
+        class="absolute inset-0 bg-black/50 backdrop-blur-sm" 
+        @click="showHistoryModal = false"
+      ></div>
+      
+      <!-- Modal Content -->
+      <div class="relative glass-card p-6 max-w-4xl w-full max-h-[80vh] overflow-y-auto">
+        <div class="flex items-center justify-between mb-6">
+          <h3 class="text-xl font-bold text-white">历史报告</h3>
+          <button 
+            @click="showHistoryModal = false"
+            class="text-gray-400 hover:text-white transition-colors"
+          >
+            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <div v-if="loadingReports" class="text-center py-12">
+          <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500"></div>
+          <p class="mt-2 text-gray-400">加载中...</p>
+        </div>
+
+        <div v-else-if="historicalReports.length === 0" class="text-center py-12">
+          <div class="w-16 h-16 mx-auto mb-4 bg-gray-500/10 rounded-full flex items-center justify-center">
+            <svg class="w-8 h-8 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+          </div>
+          <p class="text-gray-400">还没有保存的报告</p>
+        </div>
+
+        <div v-else class="space-y-3">
+          <div 
+            v-for="report in historicalReports" 
+            :key="report.id"
+            class="glass-card p-4 hover:bg-white/5 transition-colors"
+          >
+            <div class="flex items-start justify-between gap-4">
+              <div class="flex-1">
+                <h4 class="text-white font-semibold mb-1">{{ report.title }}</h4>
+                <p class="text-gray-400 text-sm">
+                  创建时间: {{ new Date(report.createdAt).toLocaleString('zh-CN') }}
+                </p>
+              </div>
+              <div class="flex items-center gap-2">
+                <button
+                  @click="viewHistoricalReport(report)"
+                  class="text-primary-400 hover:text-primary-300 transition-colors p-2"
+                  title="查看"
+                >
+                  <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                </button>
+                <button
+                  @click="() => { currentReportId = report.id; downloadPdf(); }"
+                  class="text-green-400 hover:text-green-300 transition-colors p-2"
+                  title="下载PDF"
+                >
+                  <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </button>
+                <button
+                  @click="deleteReport(report.id)"
+                  class="text-red-400 hover:text-red-300 transition-colors p-2"
+                  title="删除"
+                >
+                  <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 

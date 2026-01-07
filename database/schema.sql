@@ -6,6 +6,7 @@
 -- CREATE DATABASE todolist;
 
 -- 删除已存在的表（谨慎使用）
+DROP TABLE IF EXISTS "reports" CASCADE;
 DROP TABLE IF EXISTS "orders" CASCADE;
 DROP TABLE IF EXISTS "todos" CASCADE;
 DROP TABLE IF EXISTS "users" CASCADE;
@@ -25,7 +26,7 @@ DROP TYPE IF EXISTS "orders_plantype_enum" CASCADE;
 -- ============================================
 
 -- 用户登录类型
-CREATE TYPE "users_logintype_enum" AS ENUM ('phone', 'email', 'wechat');
+CREATE TYPE "users_logintype_enum" AS ENUM ('phone', 'email', 'wechat', 'google', 'github');
 
 -- 账户类型
 CREATE TYPE "users_accounttype_enum" AS ENUM ('free', 'pro');
@@ -57,6 +58,8 @@ CREATE TABLE "users" (
     "phone" VARCHAR UNIQUE,
     "email" VARCHAR UNIQUE,
     "wechatOpenId" VARCHAR UNIQUE,
+    "googleId" VARCHAR UNIQUE,
+    "githubId" VARCHAR UNIQUE,
     "password" VARCHAR,
     "nickname" VARCHAR,
     "avatar" VARCHAR,
@@ -72,6 +75,8 @@ CREATE TABLE "users" (
 CREATE INDEX "IDX_users_phone" ON "users" ("phone");
 CREATE INDEX "IDX_users_email" ON "users" ("email");
 CREATE INDEX "IDX_users_wechatOpenId" ON "users" ("wechatOpenId");
+CREATE INDEX "IDX_users_googleId" ON "users" ("googleId");
+CREATE INDEX "IDX_users_githubId" ON "users" ("githubId");
 CREATE INDEX "IDX_users_accountType" ON "users" ("accountType");
 
 -- ============================================
@@ -128,6 +133,26 @@ CREATE INDEX "IDX_orders_userId" ON "orders" ("userId");
 CREATE INDEX "IDX_orders_status" ON "orders" ("status");
 
 -- ============================================
+-- AI分析报告表
+-- ============================================
+
+CREATE TABLE "reports" (
+    "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    "title" VARCHAR NOT NULL,
+    "content" TEXT NOT NULL,
+    "statisticsData" TEXT,
+    "userId" UUID NOT NULL,
+    "createdAt" TIMESTAMP NOT NULL DEFAULT NOW(),
+    "updatedAt" TIMESTAMP NOT NULL DEFAULT NOW(),
+    CONSTRAINT "FK_reports_userId" FOREIGN KEY ("userId") 
+        REFERENCES "users"("id") ON DELETE CASCADE
+);
+
+-- 创建索引
+CREATE INDEX "IDX_reports_userId" ON "reports" ("userId");
+CREATE INDEX "IDX_reports_createdAt" ON "reports" ("createdAt");
+
+-- ============================================
 -- 触发器：自动更新 updatedAt
 -- ============================================
 
@@ -146,6 +171,9 @@ CREATE TRIGGER update_todos_updated_at BEFORE UPDATE ON "todos"
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER update_orders_updated_at BEFORE UPDATE ON "orders"
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_reports_updated_at BEFORE UPDATE ON "reports"
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- ============================================

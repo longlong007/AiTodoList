@@ -6,6 +6,7 @@ import { TodoModule } from './todo/todo.module';
 import { UserModule } from './user/user.module';
 import { AiModule } from './ai/ai.module';
 import { PaymentModule } from './payment/payment.module';
+import { ReportModule } from './report/report.module';
 
 @Module({
   imports: [
@@ -68,6 +69,7 @@ import { PaymentModule } from './payment/payment.module';
     TodoModule,
     AiModule,
     PaymentModule,
+    ReportModule,
   ],
 })
 export class AppModule {}

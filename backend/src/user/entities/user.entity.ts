@@ -1,5 +1,6 @@
 import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
 import { Todo } from '../../todo/entities/todo.entity';
+import { Report } from '../../report/entities/report.entity';
 import { Exclude } from 'class-transformer';
 
 export enum LoginType {
@@ -80,6 +81,9 @@ export class User {
 
   @OneToMany(() => Todo, (todo) => todo.user)
   todos: Todo[];
+
+  @OneToMany(() => Report, (report) => report.user)
+  reports: Report[];
 
   @CreateDateColumn()
   createdAt: Date;
