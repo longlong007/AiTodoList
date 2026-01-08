@@ -6,15 +6,45 @@
 
 ```
 database/
-├── schema.sql              # 数据库表结构定义
+├── schema.sql              # 数据库表结构定义（包含所有表和 PDF 字段）
 ├── seed.sql                # 测试数据（需要先更新密码哈希）
 ├── generate-passwords.js   # 密码哈希生成工具
-├── import.sh              # Linux/Mac 导入脚本
-├── import.bat             # Windows 导入脚本
+├── setup-all.sh           # 一键安装脚本 (Linux/Mac) ⭐ 推荐
+├── setup-all.bat          # 一键安装脚本 (Windows) ⭐ 推荐
+├── import.sh              # 分步导入脚本 (Linux/Mac)
+├── import.bat             # 分步导入脚本 (Windows)
+├── add-report-pdf-fields.sql  # PDF 字段迁移脚本（仅用于旧数据库升级）
 └── README.md              # 本文档
 ```
 
-## 🚀 快速开始
+## 🚀 快速开始（一键安装）⭐
+
+### 方法 1：使用一键安装脚本（推荐）
+
+**Windows:**
+```cmd
+cd database
+setup-all.bat
+```
+
+**Linux/Mac:**
+```bash
+cd database
+chmod +x setup-all.sh
+./setup-all.sh
+```
+
+这将自动完成：
+- ✅ 创建所有数据库表（users, todos, orders, reports）
+- ✅ 添加 PDF 存储字段（pdfUrl, pdfKey）
+- ✅ 导入测试数据（5个测试用户，290条待办，5个订单）
+- ✅ 显示测试账号信息
+
+⚠️ **警告**：脚本会删除并重建所有表，现有数据将丢失！
+
+---
+
+## 🔧 分步安装（旧方法）
 
 ### 1. 生成密码哈希（首次使用）
 
@@ -195,12 +225,20 @@ docker exec -i $(docker-compose ps -q postgres) psql -U postgres -d todolist < d
 
 如果需要重置数据库到初始状态，可以：
 
-### 方式一：重新运行导入脚本
+### 方式一：重新运行一键安装脚本（推荐）
 
 ```bash
-# 脚本会自动清空现有数据
-./database/import.sh  # Linux/Mac
-database\import.bat   # Windows
+cd database
+./setup-all.sh  # Linux/Mac
+setup-all.bat   # Windows
+```
+
+### 方式二：运行分步导入脚本
+
+```bash
+cd database
+./import.sh  # Linux/Mac
+import.bat   # Windows
 ```
 
 ### 方式二：手动重置
