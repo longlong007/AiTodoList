@@ -3,12 +3,14 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
 import { User, LoginType, AccountType, SubscriptionStatus } from './entities/user.entity';
+import { CacheService } from '../cache/cache.service';
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectRepository(User)
     private userRepository: Repository<User>,
+    private cacheService: CacheService,
   ) {}
 
   async findByEmail(email: string): Promise<User | null> {
@@ -32,7 +34,23 @@ export class UserService {
   }
 
   async findById(id: string): Promise<User | null> {
-    return this.userRepository.findOne({ where: { id } });
+    // 先从缓存读取
+    const cacheKey = this.cacheService.getUserKey(id);
+    const cached = await this.cacheService.get<User>(cacheKey);
+    
+    if (cached) {
+      return cached;
+    }
+
+    // 缓存未命中，从数据库查询
+    const user = await this.userRepository.findOne({ where: { id } });
+    
+    if (user) {
+      // 缓存用户信息30分钟
+      await this.cacheService.set(cacheKey, user, 1800);
+    }
+    
+    return user;
   }
 
   async createWithEmail(email: string, password: string): Promise<User> {
@@ -49,7 +67,13 @@ export class UserService {
       nickname: email.split('@')[0],
     });
 
-    return this.userRepository.save(user);
+    const savedUser = await this.userRepository.save(user);
+    
+    // 缓存新用户信息
+    const cacheKey = this.cacheService.getUserKey(savedUser.id);
+    await this.cacheService.set(cacheKey, savedUser, 1800);
+    
+    return savedUser;
   }
 
   async createWithPhone(phone: string, password: string): Promise<User> {
@@ -66,7 +90,13 @@ export class UserService {
       nickname: `用户${phone.slice(-4)}`,
     });
 
-    return this.userRepository.save(user);
+    const savedUser = await this.userRepository.save(user);
+    
+    // 缓存新用户信息
+    const cacheKey = this.cacheService.getUserKey(savedUser.id);
+    await this.cacheService.set(cacheKey, savedUser, 1800);
+    
+    return savedUser;
   }
 
   async createOrUpdateWithWechat(wechatOpenId: string, nickname?: string, avatar?: string): Promise<User> {
@@ -76,7 +106,12 @@ export class UserService {
       // 更新用户信息
       if (nickname) user.nickname = nickname;
       if (avatar) user.avatar = avatar;
-      return this.userRepository.save(user);
+      const savedUser = await this.userRepository.save(user);
+      
+      // 清除缓存
+      await this.cacheService.del(this.cacheService.getUserKey(savedUser.id));
+      
+      return savedUser;
     }
 
     // 创建新用户
@@ -87,7 +122,12 @@ export class UserService {
       avatar,
     });
 
-    return this.userRepository.save(user);
+    const savedUser = await this.userRepository.save(user);
+    
+    // 缓存新用户信息
+    await this.cacheService.set(this.cacheService.getUserKey(savedUser.id), savedUser, 1800);
+    
+    return savedUser;
   }
 
   async createOrUpdateWithGoogle(googleId: string, email?: string, nickname?: string, avatar?: string): Promise<User> {
@@ -98,7 +138,12 @@ export class UserService {
       if (email && !user.email) user.email = email;
       if (nickname) user.nickname = nickname;
       if (avatar) user.avatar = avatar;
-      return this.userRepository.save(user);
+      const savedUser = await this.userRepository.save(user);
+      
+      // 清除缓存
+      await this.cacheService.del(this.cacheService.getUserKey(savedUser.id));
+      
+      return savedUser;
     }
 
     // 如果邮箱已存在，关联 Google ID
@@ -108,7 +153,12 @@ export class UserService {
         existingUser.googleId = googleId;
         if (nickname) existingUser.nickname = nickname;
         if (avatar) existingUser.avatar = avatar;
-        return this.userRepository.save(existingUser);
+        const savedUser = await this.userRepository.save(existingUser);
+        
+        // 清除缓存
+        await this.cacheService.del(this.cacheService.getUserKey(savedUser.id));
+        
+        return savedUser;
       }
     }
 
@@ -121,7 +171,12 @@ export class UserService {
       avatar,
     });
 
-    return this.userRepository.save(user);
+    const savedUser = await this.userRepository.save(user);
+    
+    // 缓存新用户信息
+    await this.cacheService.set(this.cacheService.getUserKey(savedUser.id), savedUser, 1800);
+    
+    return savedUser;
   }
 
   async createOrUpdateWithGithub(githubId: string, email?: string, nickname?: string, avatar?: string): Promise<User> {
@@ -132,7 +187,12 @@ export class UserService {
       if (email && !user.email) user.email = email;
       if (nickname) user.nickname = nickname;
       if (avatar) user.avatar = avatar;
-      return this.userRepository.save(user);
+      const savedUser = await this.userRepository.save(user);
+      
+      // 清除缓存
+      await this.cacheService.del(this.cacheService.getUserKey(savedUser.id));
+      
+      return savedUser;
     }
 
     // 如果邮箱已存在，关联 GitHub ID
@@ -142,7 +202,12 @@ export class UserService {
         existingUser.githubId = githubId;
         if (nickname) existingUser.nickname = nickname;
         if (avatar) existingUser.avatar = avatar;
-        return this.userRepository.save(existingUser);
+        const savedUser = await this.userRepository.save(existingUser);
+        
+        // 清除缓存
+        await this.cacheService.del(this.cacheService.getUserKey(savedUser.id));
+        
+        return savedUser;
       }
     }
 
@@ -155,7 +220,12 @@ export class UserService {
       avatar,
     });
 
-    return this.userRepository.save(user);
+    const savedUser = await this.userRepository.save(user);
+    
+    // 缓存新用户信息
+    await this.cacheService.set(this.cacheService.getUserKey(savedUser.id), savedUser, 1800);
+    
+    return savedUser;
   }
 
   async validatePassword(user: User, password: string): Promise<boolean> {
@@ -170,7 +240,12 @@ export class UserService {
     }
 
     Object.assign(user, data);
-    return this.userRepository.save(user);
+    const savedUser = await this.userRepository.save(user);
+    
+    // 清除缓存
+    await this.cacheService.del(this.cacheService.getUserKey(userId));
+    
+    return savedUser;
   }
 
   // 更新订阅状态
@@ -188,21 +263,41 @@ export class UserService {
     user.subscriptionStatus = data.subscriptionStatus;
     user.subscriptionExpireAt = data.subscriptionExpireAt;
     
-    return this.userRepository.save(user);
+    const savedUser = await this.userRepository.save(user);
+    
+    // 清除用户缓存和Pro状态缓存
+    await this.cacheService.del(this.cacheService.getUserKey(userId));
+    await this.cacheService.del(this.cacheService.getUserProKey(userId));
+    
+    return savedUser;
   }
 
   // 检查用户是否是Pro会员
   async checkProStatus(userId: string): Promise<{ isPro: boolean; expireAt?: Date }> {
+    // 先从缓存读取Pro状态
+    const cacheKey = this.cacheService.getUserProKey(userId);
+    const cached = await this.cacheService.get<{ isPro: boolean; expireAt?: Date }>(cacheKey);
+    
+    if (cached !== undefined) {
+      return cached;
+    }
+
+    // 缓存未命中，查询数据库
     const user = await this.findById(userId);
     if (!user) {
       return { isPro: false };
     }
 
     const isPro = user.isPro();
-    return {
+    const result = {
       isPro,
       expireAt: isPro ? user.subscriptionExpireAt : undefined,
     };
+    
+    // 缓存Pro状态5分钟
+    await this.cacheService.set(cacheKey, result, 300);
+    
+    return result;
   }
 }
 

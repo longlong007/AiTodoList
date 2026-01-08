@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
 import { TodoService } from '../todo/todo.service';
 import { UserService } from '../user/user.service';
+import { CacheService } from '../cache/cache.service';
 import { Todo, TodoStatus, Importance } from '../todo/entities/todo.entity';
 
 @Injectable()
@@ -14,6 +15,7 @@ export class AiService {
     private configService: ConfigService,
     private todoService: TodoService,
     private userService: UserService,
+    private cacheService: CacheService,
   ) {
     this.apiKey = this.configService.get('ZHIPU_API_KEY', '');
     // 添加调试日志
@@ -41,6 +43,15 @@ export class AiService {
       throw new ForbiddenException(reason);
     }
 
+    // 先从缓存读取AI分析结果
+    const cacheKey = this.cacheService.getAiAnalysisKey(userId);
+    const cached = await this.cacheService.get<string>(cacheKey);
+    
+    if (cached) {
+      console.log('✅ AI分析结果命中缓存');
+      return cached;
+    }
+
     // 获取用户的历史待办事项
     const todos = await this.todoService.getHistoryForAI(userId);
     const statistics = await this.todoService.getStatistics(userId);
@@ -54,6 +65,11 @@ export class AiService {
 
     try {
       const response = await this.callZhipuAPI(prompt);
+      
+      // 缓存AI分析结果24小时（避免频繁调用API）
+      await this.cacheService.set(cacheKey, response, 86400);
+      console.log('✅ AI分析结果已缓存');
+      
       return response;
     } catch (error) {
       console.error('AI分析错误:', error);

@@ -1,6 +1,7 @@
 import { Controller, Get, Post, Body, Param, Query, UseGuards, Request, Res, BadRequestException } from '@nestjs/common';
 import { Response } from 'express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RateLimitGuard, RateLimit } from '../common/guards/rate-limit.guard';
 import { PaymentService } from './payment.service';
 import { CreateOrderDto } from './dto/payment.dto';
 
@@ -16,7 +17,8 @@ export class PaymentController {
 
   // 创建订单
   @Post('order')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RateLimitGuard)
+  @RateLimit(5, 60) // 每分钟最多5次
   async createOrder(@Request() req, @Body() dto: CreateOrderDto) {
     const order = await this.paymentService.createOrder(req.user.userId, dto);
     return {

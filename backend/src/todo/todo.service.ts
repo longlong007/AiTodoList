@@ -3,12 +3,14 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Todo, Importance, TodoStatus } from './entities/todo.entity';
 import { CreateTodoDto, UpdateTodoDto, QueryTodoDto } from './dto/todo.dto';
+import { CacheService } from '../cache/cache.service';
 
 @Injectable()
 export class TodoService {
   constructor(
     @InjectRepository(Todo)
     private todoRepository: Repository<Todo>,
+    private cacheService: CacheService,
   ) {}
 
   async create(userId: string, dto: CreateTodoDto): Promise<Todo> {
@@ -16,7 +18,12 @@ export class TodoService {
       ...dto,
       userId,
     });
-    return this.todoRepository.save(todo);
+    const savedTodo = await this.todoRepository.save(todo);
+    
+    // 清除用户的统计缓存
+    await this.cacheService.del(this.cacheService.getTodoStatsKey(userId));
+    
+    return savedTodo;
   }
 
   async findAll(userId: string, query: QueryTodoDto): Promise<{ data: Todo[]; total: number }> {
@@ -79,15 +86,32 @@ export class TodoService {
     }
 
     Object.assign(todo, dto);
-    return this.todoRepository.save(todo);
+    const savedTodo = await this.todoRepository.save(todo);
+    
+    // 清除用户的统计缓存
+    await this.cacheService.del(this.cacheService.getTodoStatsKey(userId));
+    
+    return savedTodo;
   }
 
   async remove(id: string, userId: string): Promise<void> {
     const todo = await this.findOne(id, userId);
     await this.todoRepository.remove(todo);
+    
+    // 清除用户的统计缓存
+    await this.cacheService.del(this.cacheService.getTodoStatsKey(userId));
   }
 
   async getStatistics(userId: string): Promise<any> {
+    // 先从缓存读取
+    const cacheKey = this.cacheService.getTodoStatsKey(userId);
+    const cached = await this.cacheService.get<any>(cacheKey);
+    
+    if (cached) {
+      return cached;
+    }
+
+    // 缓存未命中，查询数据库
     const todos = await this.todoRepository.find({
       where: { userId },
     });
@@ -126,7 +150,7 @@ export class TodoService {
       new Date(t.completedAt) <= new Date(t.dueDate)
     ).length;
 
-    return {
+    const statistics = {
       total,
       completed,
       pending,
@@ -138,6 +162,11 @@ export class TodoService {
       byUrgency,
       recentTodos: todos.slice(0, 10),
     };
+    
+    // 缓存统计数据10分钟
+    await this.cacheService.set(cacheKey, statistics, 600);
+    
+    return statistics;
   }
 
   async getHistoryForAI(userId: string): Promise<Todo[]> {

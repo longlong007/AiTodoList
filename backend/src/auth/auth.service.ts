@@ -2,12 +2,14 @@ import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/
 import { JwtService } from '@nestjs/jwt';
 import { UserService } from '../user/user.service';
 import { User } from '../user/entities/user.entity';
+import { CacheService } from '../cache/cache.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private userService: UserService,
     private jwtService: JwtService,
+    private cacheService: CacheService,
   ) {}
 
   async validateUser(identifier: string, password: string, type: 'email' | 'phone'): Promise<User> {
@@ -125,6 +127,41 @@ export class AuthService {
   private isValidPhone(phone: string): boolean {
     const phoneRegex = /^1[3-9]\d{9}$/;
     return phoneRegex.test(phone);
+  }
+
+  /**
+   * 登出 - 将token加入黑名单
+   */
+  async logout(token: string): Promise<void> {
+    try {
+      // 解析token获取过期时间
+      const decoded = this.jwtService.decode(token) as any;
+      if (!decoded || !decoded.exp) {
+        return;
+      }
+
+      // 计算token剩余有效时间
+      const now = Math.floor(Date.now() / 1000);
+      const ttl = decoded.exp - now;
+
+      if (ttl > 0) {
+        // 将token加入黑名单，TTL为token剩余有效时间
+        const blacklistKey = this.cacheService.getJwtBlacklistKey(token);
+        await this.cacheService.set(blacklistKey, true, ttl);
+        console.log(`✅ Token已加入黑名单，TTL: ${ttl}秒`);
+      }
+    } catch (error) {
+      console.error('登出失败:', error);
+    }
+  }
+
+  /**
+   * 检查token是否在黑名单中
+   */
+  async isTokenBlacklisted(token: string): Promise<boolean> {
+    const blacklistKey = this.cacheService.getJwtBlacklistKey(token);
+    const isBlacklisted = await this.cacheService.get(blacklistKey);
+    return !!isBlacklisted;
   }
 }
 

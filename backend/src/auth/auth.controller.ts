@@ -1,4 +1,4 @@
-import { Controller, Post, Body, HttpCode, HttpStatus, Get, UseGuards, Req, Res } from '@nestjs/common';
+import { Controller, Post, Body, HttpCode, HttpStatus, Get, UseGuards, Req, Res, Headers } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from './auth.service';
 import { RegisterDto, LoginDto, WechatLoginDto } from './dto/auth.dto';
@@ -68,6 +68,18 @@ export class AuthController {
     // 重定向到前端，携带 token
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
     res.redirect(`${frontendUrl}/auth/callback?token=${result.access_token}`);
+  }
+
+  // 登出
+  @Post('logout')
+  @UseGuards(AuthGuard('jwt'))
+  @HttpCode(HttpStatus.OK)
+  async logout(@Headers('authorization') authorization: string) {
+    if (authorization && authorization.startsWith('Bearer ')) {
+      const token = authorization.substring(7);
+      await this.authService.logout(token);
+    }
+    return { message: '登出成功' };
   }
 }
 
