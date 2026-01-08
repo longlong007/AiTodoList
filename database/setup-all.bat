@@ -61,6 +61,7 @@ echo ====================================
 echo Step 1/2: Creating database structure...
 echo ====================================
 set PGCLIENTENCODING=UTF8
+set PGOPTIONS=--lc-messages=C
 psql -h %DB_HOST% -p %DB_PORT% -U %DB_USER% -d %DB_NAME% --set=client_encoding=UTF8 -f schema.sql
 
 if %errorlevel% neq 0 (
@@ -84,6 +85,7 @@ echo ====================================
 echo Step 2/2: Importing test data...
 echo ====================================
 set PGCLIENTENCODING=UTF8
+set PGOPTIONS=--lc-messages=C
 psql -h %DB_HOST% -p %DB_PORT% -U %DB_USER% -d %DB_NAME% --set=client_encoding=UTF8 -f seed.sql
 
 if %errorlevel% neq 0 (

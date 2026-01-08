@@ -64,7 +64,7 @@ echo -e "${BLUE}====================================${NC}"
 echo -e "${BLUE}Step 1/2: Creating database structure...${NC}"
 echo -e "${BLUE}====================================${NC}"
 
-PGCLIENTENCODING=UTF8 psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -f schema.sql
+PGCLIENTENCODING=UTF8 PGOPTIONS="--lc-messages=C" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -f schema.sql
 
 if [ $? -ne 0 ]; then
     echo -e "${RED}[ERROR] Failed to create database structure${NC}"
@@ -86,7 +86,7 @@ echo -e "${BLUE}====================================${NC}"
 echo -e "${BLUE}Step 2/2: Importing test data...${NC}"
 echo -e "${BLUE}====================================${NC}"
 
-PGCLIENTENCODING=UTF8 psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -f seed.sql
+PGCLIENTENCODING=UTF8 PGOPTIONS="--lc-messages=C" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -f seed.sql
 
 if [ $? -ne 0 ]; then
     echo -e "${RED}[ERROR] Failed to import test data${NC}"

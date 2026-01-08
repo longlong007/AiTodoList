@@ -96,57 +96,57 @@ VALUES
 INSERT INTO "todos" 
 ("id", "title", "description", "importance", "urgency", "status", "dueDate", "userId", "createdAt", "updatedAt")
 VALUES 
-('todo-1-1', '学习Vue3基础', '完成Vue3官方教程前5章', 'A', 1, 'in_progress', NOW() + INTERVAL '3 days', '11111111-1111-1111-1111-111111111111', NOW() - INTERVAL '2 days', NOW()),
-('todo-1-2', '购买日用品', '牙膏、洗发水、纸巾', 'C', 3, 'pending', NOW() + INTERVAL '7 days', '11111111-1111-1111-1111-111111111111', NOW() - INTERVAL '1 day', NOW()),
-('todo-1-3', '健身房锻炼', '每周至少3次有氧运动', 'B', 2, 'pending', NOW() + INTERVAL '2 days', '11111111-1111-1111-1111-111111111111', NOW(), NOW()),
-('todo-1-4', '完成项目报告', '整理Q4季度项目总结报告', 'A', 1, 'completed', NOW() - INTERVAL '5 days', '11111111-1111-1111-1111-111111111111', NOW() - INTERVAL '10 days', NOW() - INTERVAL '5 days');
+('10000000-0000-0000-0000-000000000001', '学习Vue3基础', '完成Vue3官方教程前5章', 'A', 1, 'in_progress', NOW() + INTERVAL '3 days', '11111111-1111-1111-1111-111111111111', NOW() - INTERVAL '2 days', NOW()),
+('10000000-0000-0000-0000-000000000002', '购买日用品', '牙膏、洗发水、纸巾', 'C', 3, 'pending', NOW() + INTERVAL '7 days', '11111111-1111-1111-1111-111111111111', NOW() - INTERVAL '1 day', NOW()),
+('10000000-0000-0000-0000-000000000003', '健身房锻炼', '每周至少3次有氧运动', 'B', 2, 'pending', NOW() + INTERVAL '2 days', '11111111-1111-1111-1111-111111111111', NOW(), NOW()),
+('10000000-0000-0000-0000-000000000004', '完成项目报告', '整理Q4季度项目总结报告', 'A', 1, 'completed', NOW() - INTERVAL '5 days', '11111111-1111-1111-1111-111111111111', NOW() - INTERVAL '10 days', NOW() - INTERVAL '5 days');
 
 -- 用户2的待办事项（Pro用户 - 较多数据，展示Pro功能）
 INSERT INTO "todos" 
 ("id", "title", "description", "importance", "urgency", "status", "dueDate", "userId", "createdAt", "updatedAt")
 VALUES 
 -- 重要紧急
-('todo-2-1', '紧急修复生产环境Bug', '用户登录失败问题，影响大量用户', 'A', 1, 'in_progress', NOW() + INTERVAL '6 hours', '22222222-2222-2222-2222-222222222222', NOW() - INTERVAL '2 hours', NOW()),
-('todo-2-2', '准备明天的产品演示', '完成PPT和Demo环境搭建', 'A', 1, 'in_progress', NOW() + INTERVAL '1 day', '22222222-2222-2222-2222-222222222222', NOW() - INTERVAL '1 day', NOW()),
+('20000000-0000-0000-0000-000000000001', '紧急修复生产环境Bug', '用户登录失败问题，影响大量用户', 'A', 1, 'in_progress', NOW() + INTERVAL '6 hours', '22222222-2222-2222-2222-222222222222', NOW() - INTERVAL '2 hours', NOW()),
+('20000000-0000-0000-0000-000000000002', '准备明天的产品演示', '完成PPT和Demo环境搭建', 'A', 1, 'in_progress', NOW() + INTERVAL '1 day', '22222222-2222-2222-2222-222222222222', NOW() - INTERVAL '1 day', NOW()),
 -- 重要不紧急
-('todo-2-3', '学习NestJS高级特性', '微服务、GraphQL、WebSocket等', 'A', 3, 'pending', NOW() + INTERVAL '30 days', '22222222-2222-2222-2222-222222222222', NOW() - INTERVAL '5 days', NOW()),
-('todo-2-4', '代码重构计划', '优化用户模块代码结构', 'A', 4, 'pending', NOW() + INTERVAL '21 days', '22222222-2222-2222-2222-222222222222', NOW() - INTERVAL '3 days', NOW()),
+('20000000-0000-0000-0000-000000000003', '学习NestJS高级特性', '微服务、GraphQL、WebSocket等', 'A', 3, 'pending', NOW() + INTERVAL '30 days', '22222222-2222-2222-2222-222222222222', NOW() - INTERVAL '5 days', NOW()),
+('20000000-0000-0000-0000-000000000004', '代码重构计划', '优化用户模块代码结构', 'A', 4, 'pending', NOW() + INTERVAL '21 days', '22222222-2222-2222-2222-222222222222', NOW() - INTERVAL '3 days', NOW()),
 -- 紧急不重要
-('todo-2-5', '更新个人简历', '添加最新项目经验', 'B', 2, 'pending', NOW() + INTERVAL '5 days', '22222222-2222-2222-2222-222222222222', NOW(), NOW()),
-('todo-2-6', '参加技术分享会', '主题：前端性能优化实践', 'B', 1, 'completed', NOW() - INTERVAL '2 days', '22222222-2222-2222-2222-222222222222', NOW() - INTERVAL '7 days', NOW() - INTERVAL '2 days'),
+('20000000-0000-0000-0000-000000000005', '更新个人简历', '添加最新项目经验', 'B', 2, 'pending', NOW() + INTERVAL '5 days', '22222222-2222-2222-2222-222222222222', NOW(), NOW()),
+('20000000-0000-0000-0000-000000000006', '参加技术分享会', '主题：前端性能优化实践', 'B', 1, 'completed', NOW() - INTERVAL '2 days', '22222222-2222-2222-2222-222222222222', NOW() - INTERVAL '7 days', NOW() - INTERVAL '2 days'),
 -- 不重要不紧急
-('todo-2-7', '整理电脑文件', '删除无用文件，整理文档', 'C', 4, 'pending', NOW() + INTERVAL '14 days', '22222222-2222-2222-2222-222222222222', NOW() - INTERVAL '1 day', NOW()),
-('todo-2-8', '观看技术视频', 'B站收藏的编程教程', 'D', 5, 'pending', NULL, '22222222-2222-2222-2222-222222222222', NOW() - INTERVAL '10 days', NOW()),
+('20000000-0000-0000-0000-000000000007', '整理电脑文件', '删除无用文件，整理文档', 'C', 4, 'pending', NOW() + INTERVAL '14 days', '22222222-2222-2222-2222-222222222222', NOW() - INTERVAL '1 day', NOW()),
+('20000000-0000-0000-0000-000000000008', '观看技术视频', 'B站收藏的编程教程', 'D', 5, 'pending', NULL, '22222222-2222-2222-2222-222222222222', NOW() - INTERVAL '10 days', NOW()),
 -- 已完成的任务
-('todo-2-9', '完成数据库设计', '设计用户、订单、待办表结构', 'A', 1, 'completed', NOW() - INTERVAL '15 days', '22222222-2222-2222-2222-222222222222', NOW() - INTERVAL '20 days', NOW() - INTERVAL '15 days'),
-('todo-2-10', '实现支付功能', '集成支付宝和微信支付', 'A', 2, 'completed', NOW() - INTERVAL '7 days', '22222222-2222-2222-2222-222222222222', NOW() - INTERVAL '14 days', NOW() - INTERVAL '7 days'),
-('todo-2-11', '编写API文档', '完善接口说明和示例', 'B', 3, 'completed', NOW() - INTERVAL '10 days', '22222222-2222-2222-2222-222222222222', NOW() - INTERVAL '15 days', NOW() - INTERVAL '10 days'),
+('20000000-0000-0000-0000-000000000009', '完成数据库设计', '设计用户、订单、待办表结构', 'A', 1, 'completed', NOW() - INTERVAL '15 days', '22222222-2222-2222-2222-222222222222', NOW() - INTERVAL '20 days', NOW() - INTERVAL '15 days'),
+('20000000-0000-0000-0000-000000000010', '实现支付功能', '集成支付宝和微信支付', 'A', 2, 'completed', NOW() - INTERVAL '7 days', '22222222-2222-2222-2222-222222222222', NOW() - INTERVAL '14 days', NOW() - INTERVAL '7 days'),
+('20000000-0000-0000-0000-000000000011', '编写API文档', '完善接口说明和示例', 'B', 3, 'completed', NOW() - INTERVAL '10 days', '22222222-2222-2222-2222-222222222222', NOW() - INTERVAL '15 days', NOW() - INTERVAL '10 days'),
 -- 已取消的任务
-('todo-2-12', '学习PHP框架', '改用NestJS后不再需要', 'C', 4, 'cancelled', NULL, '22222222-2222-2222-2222-222222222222', NOW() - INTERVAL '30 days', NOW() - INTERVAL '25 days');
+('20000000-0000-0000-0000-000000000012', '学习PHP框架', '改用NestJS后不再需要', 'C', 4, 'cancelled', NULL, '22222222-2222-2222-2222-222222222222', NOW() - INTERVAL '30 days', NOW() - INTERVAL '25 days');
 
 -- 用户3的待办事项（Pro用户 - 中等数据）
 INSERT INTO "todos" 
 ("id", "title", "description", "importance", "urgency", "status", "dueDate", "userId", "createdAt", "updatedAt")
 VALUES 
-('todo-3-1', '准备年度总结报告', '整理全年工作成果', 'A', 1, 'in_progress', NOW() + INTERVAL '10 days', '33333333-3333-3333-3333-333333333333', NOW() - INTERVAL '3 days', NOW()),
-('todo-3-2', '续费Pro会员', '5天后到期，记得续费', 'A', 1, 'pending', NOW() + INTERVAL '5 days', '33333333-3333-3333-3333-333333333333', NOW(), NOW()),
-('todo-3-3', '学习AI大模型应用', '研究ChatGPT API集成方案', 'B', 2, 'in_progress', NOW() + INTERVAL '20 days', '33333333-3333-3333-3333-333333333333', NOW() - INTERVAL '5 days', NOW()),
-('todo-3-4', '优化AI分析功能', '使用智谱GLM-4.7优化提示词', 'A', 2, 'completed', NOW() - INTERVAL '3 days', '33333333-3333-3333-3333-333333333333', NOW() - INTERVAL '7 days', NOW() - INTERVAL '3 days'),
-('todo-3-5', '团队协作工具调研', '对比Notion、飞书、企业微信', 'C', 3, 'pending', NOW() + INTERVAL '15 days', '33333333-3333-3333-3333-333333333333', NOW() - INTERVAL '2 days', NOW());
+('30000000-0000-0000-0000-000000000001', '准备年度总结报告', '整理全年工作成果', 'A', 1, 'in_progress', NOW() + INTERVAL '10 days', '33333333-3333-3333-3333-333333333333', NOW() - INTERVAL '3 days', NOW()),
+('30000000-0000-0000-0000-000000000002', '续费Pro会员', '5天后到期，记得续费', 'A', 1, 'pending', NOW() + INTERVAL '5 days', '33333333-3333-3333-3333-333333333333', NOW(), NOW()),
+('30000000-0000-0000-0000-000000000003', '学习AI大模型应用', '研究ChatGPT API集成方案', 'B', 2, 'in_progress', NOW() + INTERVAL '20 days', '33333333-3333-3333-3333-333333333333', NOW() - INTERVAL '5 days', NOW()),
+('30000000-0000-0000-0000-000000000004', '优化AI分析功能', '使用智谱GLM-4.7优化提示词', 'A', 2, 'completed', NOW() - INTERVAL '3 days', '33333333-3333-3333-3333-333333333333', NOW() - INTERVAL '7 days', NOW() - INTERVAL '3 days'),
+('30000000-0000-0000-0000-000000000005', '团队协作工具调研', '对比Notion、飞书、企业微信', 'C', 3, 'pending', NOW() + INTERVAL '15 days', '33333333-3333-3333-3333-333333333333', NOW() - INTERVAL '2 days', NOW());
 
 -- 用户4的待办事项（过期Pro用户）
 INSERT INTO "todos" 
 ("id", "title", "description", "importance", "urgency", "status", "userId", "createdAt", "updatedAt")
 VALUES 
-('todo-4-1', '考虑重新订阅Pro', '评估Pro功能的价值', 'B', 2, 'pending', '44444444-4444-4444-4444-444444444444', NOW() - INTERVAL '1 day', NOW()),
-('todo-4-2', '导出历史数据', '备份所有待办事项数据', 'A', 1, 'completed', '44444444-4444-4444-4444-444444444444', NOW() - INTERVAL '5 days', NOW() - INTERVAL '2 days');
+('40000000-0000-0000-0000-000000000001', '考虑重新订阅Pro', '评估Pro功能的价值', 'B', 2, 'pending', '44444444-4444-4444-4444-444444444444', NOW() - INTERVAL '1 day', NOW()),
+('40000000-0000-0000-0000-000000000002', '导出历史数据', '备份所有待办事项数据', 'A', 1, 'completed', '44444444-4444-4444-4444-444444444444', NOW() - INTERVAL '5 days', NOW() - INTERVAL '2 days');
 
 -- 用户5的待办事项（微信用户）
 INSERT INTO "todos" 
 ("id", "title", "description", "importance", "urgency", "status", "userId", "createdAt", "updatedAt")
 VALUES 
-('todo-5-1', '体验Pro功能', '查看AI分析是否值得订阅', 'C', 3, 'pending', '55555555-5555-5555-5555-555555555555', NOW(), NOW()),
-('todo-5-2', '添加第一个待办', '测试基础功能', 'B', 2, 'completed', '55555555-5555-5555-5555-555555555555', NOW() - INTERVAL '1 day', NOW());
+('50000000-0000-0000-0000-000000000001', '体验Pro功能', '查看AI分析是否值得订阅', 'C', 3, 'pending', '55555555-5555-5555-5555-555555555555', NOW(), NOW()),
+('50000000-0000-0000-0000-000000000002', '添加第一个待办', '测试基础功能', 'B', 2, 'completed', '55555555-5555-5555-5555-555555555555', NOW() - INTERVAL '1 day', NOW());
 
 -- ============================================
 -- 3. 插入订单数据
@@ -156,31 +156,31 @@ VALUES
 INSERT INTO "orders" 
 ("id", "orderNo", "userId", "planType", "amount", "paymentMethod", "status", "tradeNo", "paidAt", "createdAt", "updatedAt")
 VALUES 
-('order-2-1', 'ORD202601010001', '22222222-2222-2222-2222-222222222222', 'yearly', 14990, 'alipay', 'paid', 'ALIPAY2026010112345678', NOW() - INTERVAL '60 days', NOW() - INTERVAL '60 days', NOW() - INTERVAL '60 days');
+('a0000000-0000-0000-0000-000000000001', 'ORD202601010001', '22222222-2222-2222-2222-222222222222', 'yearly', 14990, 'alipay', 'paid', 'ALIPAY2026010112345678', NOW() - INTERVAL '60 days', NOW() - INTERVAL '60 days', NOW() - INTERVAL '60 days');
 
 -- 用户3的订单（Pro用户，已支付的季度订阅）
 INSERT INTO "orders" 
 ("id", "orderNo", "userId", "planType", "amount", "paymentMethod", "status", "tradeNo", "paidAt", "createdAt", "updatedAt")
 VALUES 
-('order-3-1', 'ORD202510150001', '33333333-3333-3333-3333-333333333333', 'quarterly', 4990, 'wechat', 'paid', 'WX20251015987654321', NOW() - INTERVAL '85 days', NOW() - INTERVAL '85 days', NOW() - INTERVAL '85 days');
+('a0000000-0000-0000-0000-000000000002', 'ORD202510150001', '33333333-3333-3333-3333-333333333333', 'quarterly', 4990, 'wechat', 'paid', 'WX20251015987654321', NOW() - INTERVAL '85 days', NOW() - INTERVAL '85 days', NOW() - INTERVAL '85 days');
 
 -- 用户4的订单（过期用户，之前的订阅）
 INSERT INTO "orders" 
 ("id", "orderNo", "userId", "planType", "amount", "paymentMethod", "status", "tradeNo", "paidAt", "createdAt", "updatedAt")
 VALUES 
-('order-4-1', 'ORD202509010001', '44444444-4444-4444-4444-444444444444', 'monthly', 1990, 'alipay', 'paid', 'ALIPAY2025090111223344', NOW() - INTERVAL '100 days', NOW() - INTERVAL '100 days', NOW() - INTERVAL '100 days');
+('a0000000-0000-0000-0000-000000000003', 'ORD202509010001', '44444444-4444-4444-4444-444444444444', 'monthly', 1990, 'alipay', 'paid', 'ALIPAY2025090111223344', NOW() - INTERVAL '100 days', NOW() - INTERVAL '100 days', NOW() - INTERVAL '100 days');
 
 -- 用户1的订单（免费用户，尝试支付但取消）
 INSERT INTO "orders" 
 ("id", "orderNo", "userId", "planType", "amount", "paymentMethod", "status", "createdAt", "updatedAt")
 VALUES 
-('order-1-1', 'ORD202601030001', '11111111-1111-1111-1111-111111111111', 'monthly', 1990, 'alipay', 'cancelled', NOW() - INTERVAL '5 days', NOW() - INTERVAL '5 days');
+('a0000000-0000-0000-0000-000000000004', 'ORD202601030001', '11111111-1111-1111-1111-111111111111', 'monthly', 1990, 'alipay', 'cancelled', NOW() - INTERVAL '5 days', NOW() - INTERVAL '5 days');
 
 -- 用户5的订单（待支付）
 INSERT INTO "orders" 
 ("id", "orderNo", "userId", "planType", "amount", "paymentMethod", "status", "payUrl", "createdAt", "updatedAt")
 VALUES 
-('order-5-1', 'ORD202601040001', '55555555-5555-5555-5555-555555555555', 'monthly', 1990, 'wechat', 'pending', '/api/payment/mock-pay?orderNo=ORD202601040001', NOW() - INTERVAL '30 minutes', NOW());
+('a0000000-0000-0000-0000-000000000005', 'ORD202601040001', '55555555-5555-5555-5555-555555555555', 'monthly', 1990, 'wechat', 'pending', '/api/payment/mock-pay?orderNo=ORD202601040001', NOW() - INTERVAL '30 minutes', NOW());
 
 -- ============================================
 -- 4. 统计数据
