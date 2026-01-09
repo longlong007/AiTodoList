@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import * as OSS from 'ali-oss';
+import OSS from 'ali-oss';
 import COS from 'cos-nodejs-sdk-v5';
 import { S3Client, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
 
