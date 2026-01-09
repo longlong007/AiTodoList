@@ -45,29 +45,13 @@ export class ReportController {
     @Param('id') id: string,
     @Res({ passthrough: true }) res: Response,
   ) {
-    // #region agent log
-    fetch('http://127.0.0.1:7245/ingest/5f1615aa-14ba-473d-96d5-51334cc6f28c',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'report.controller.ts:46',message:'downloadPdf endpoint hit',data:{reportId:id,userId:req.user.userId},timestamp:Date.now(),sessionId:'debug-session',runId:'proxy-fix',hypothesisId:'CORS'})}).catch(()=>{});
-    // #endregion
-    
     const report = await this.reportService.findOne(id, req.user.userId);
-    
-    // #region agent log
-    fetch('http://127.0.0.1:7245/ingest/5f1615aa-14ba-473d-96d5-51334cc6f28c',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'report.controller.ts:54',message:'Report fetched',data:{reportId:report.id,hasPdfUrl:!!report.pdfUrl,pdfKey:report.pdfKey},timestamp:Date.now(),sessionId:'debug-session',runId:'proxy-fix',hypothesisId:'CORS'})}).catch(()=>{});
-    // #endregion
     
     // 如果对象存储中有 PDF，后端代理下载并返回
     if (report.pdfUrl && report.pdfKey) {
-      // #region agent log
-      fetch('http://127.0.0.1:7245/ingest/5f1615aa-14ba-473d-96d5-51334cc6f28c',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'report.controller.ts:63',message:'Generating signed URL and proxying download',data:{pdfKey:report.pdfKey},timestamp:Date.now(),sessionId:'debug-session',runId:'proxy-fix',hypothesisId:'CORS'})}).catch(()=>{});
-      // #endregion
-      
       try {
         // 生成带签名的临时访问 URL
         const signedUrl = await this.storageService.getSignedUrl(report.pdfKey, 3600);
-        
-        // #region agent log
-        fetch('http://127.0.0.1:7245/ingest/5f1615aa-14ba-473d-96d5-51334cc6f28c',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'report.controller.ts:72',message:'Signed URL generated, fetching PDF',data:{signedUrlPreview:signedUrl.substring(0,100)+'...'},timestamp:Date.now(),sessionId:'debug-session',runId:'proxy-fix',hypothesisId:'CORS'})}).catch(()=>{});
-        // #endregion
         
         // 后端代理下载PDF（避免CORS问题）
         const pdfResponse = await fetch(signedUrl);
@@ -76,10 +60,6 @@ export class ReportController {
         }
         
         const pdfBuffer = Buffer.from(await pdfResponse.arrayBuffer());
-        
-        // #region agent log
-        fetch('http://127.0.0.1:7245/ingest/5f1615aa-14ba-473d-96d5-51334cc6f28c',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'report.controller.ts:85',message:'PDF fetched successfully, returning to client',data:{bufferLength:pdfBuffer.length},timestamp:Date.now(),sessionId:'debug-session',runId:'proxy-fix',hypothesisId:'CORS'})}).catch(()=>{});
-        // #endregion
         
         // 设置响应头
         res.set({
@@ -90,10 +70,6 @@ export class ReportController {
         
         return new StreamableFile(pdfBuffer);
       } catch (error) {
-        // #region agent log
-        fetch('http://127.0.0.1:7245/ingest/5f1615aa-14ba-473d-96d5-51334cc6f28c',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'report.controller.ts:99',message:'Error fetching PDF from OSS',data:{error:error.message},timestamp:Date.now(),sessionId:'debug-session',runId:'proxy-fix',hypothesisId:'CORS'})}).catch(()=>{});
-        // #endregion
-        
         // 如果从OSS下载失败，尝试实时生成
         const pdfBuffer = await this.pdfService.generatePdf(report);
         res.set({
@@ -105,16 +81,8 @@ export class ReportController {
       }
     }
     
-    // #region agent log
-    fetch('http://127.0.0.1:7245/ingest/5f1615aa-14ba-473d-96d5-51334cc6f28c',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'report.controller.ts:115',message:'No PDF in storage, generating in real-time',data:{reportId:report.id},timestamp:Date.now(),sessionId:'debug-session',runId:'proxy-fix',hypothesisId:'REALTIME'})}).catch(()=>{});
-    // #endregion
-    
     // PDF 不存在，实时生成
     const pdfBuffer = await this.pdfService.generatePdf(report);
-
-    // #region agent log
-    fetch('http://127.0.0.1:7245/ingest/5f1615aa-14ba-473d-96d5-51334cc6f28c',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'report.controller.ts:123',message:'PDF buffer generated',data:{bufferLength:pdfBuffer.length},timestamp:Date.now(),sessionId:'debug-session',runId:'proxy-fix',hypothesisId:'REALTIME'})}).catch(()=>{});
-    // #endregion
 
     res.set({
       'Content-Type': 'application/pdf',
