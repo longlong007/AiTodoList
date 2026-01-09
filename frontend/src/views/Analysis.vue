@@ -96,44 +96,32 @@ const downloadPdf = async () => {
   try {
     console.log('[DEBUG] downloadPdf called, reportId:', currentReportId.value)
     
-    // 调用API获取PDF下载链接（后端会返回签名URL）
-    const { data } = await reportApi.getPdfUrl(currentReportId.value)
+    // 调用API下载PDF（后端会代理下载并返回blob）
+    const { data } = await reportApi.downloadPdf(currentReportId.value)
     
-    console.log('[DEBUG] Got PDF URL response:', data)
+    console.log('[DEBUG] PDF blob received:', {
+      size: data.size,
+      type: data.type,
+      isBlob: data instanceof Blob
+    })
     
-    if (data.data && data.data.url) {
-      const signedUrl = data.data.url
-      console.log('[DEBUG] Fetching PDF from signed URL:', signedUrl.substring(0, 100) + '...')
-      
-      // 使用fetch下载PDF文件
-      const response = await fetch(signedUrl)
-      if (!response.ok) {
-        throw new Error(`下载失败: ${response.status} ${response.statusText}`)
-      }
-      
-      const blob = await response.blob()
-      console.log('[DEBUG] PDF blob received, size:', blob.size)
-      
-      // 创建Blob URL并触发下载
-      const blobUrl = window.URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.href = blobUrl
-      link.setAttribute('download', `report-${currentReportId.value}.pdf`)
-      link.style.display = 'none'
-      document.body.appendChild(link)
-      
-      console.log('[DEBUG] Clicking download link')
-      link.click()
-      
-      // 清理
-      setTimeout(() => {
-        document.body.removeChild(link)
-        window.URL.revokeObjectURL(blobUrl)
-        console.log('[DEBUG] Download completed and cleaned up')
-      }, 100)
-    } else {
-      alert(data.message || 'PDF 尚未生成')
-    }
+    // 创建Blob URL并触发下载
+    const blobUrl = window.URL.createObjectURL(data)
+    const link = document.createElement('a')
+    link.href = blobUrl
+    link.setAttribute('download', `report-${currentReportId.value}.pdf`)
+    link.style.display = 'none'
+    document.body.appendChild(link)
+    
+    console.log('[DEBUG] Clicking download link')
+    link.click()
+    
+    // 清理
+    setTimeout(() => {
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(blobUrl)
+      console.log('[DEBUG] Download completed and cleaned up')
+    }, 100)
     
   } catch (err: any) {
     console.error('[DEBUG] 下载PDF失败 - 完整错误:', err)
