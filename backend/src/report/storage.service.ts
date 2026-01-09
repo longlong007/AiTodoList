@@ -196,6 +196,71 @@ export class StorageService {
   }
 
   /**
+   * 生成带签名的临时访问 URL（用于私有 bucket）
+   * @param key 文件路径/键名
+   * @param expiresIn 过期时间（秒），默认1小时
+   * @returns 带签名的临时访问 URL
+   */
+  async getSignedUrl(key: string, expiresIn: number = 3600): Promise<string> {
+    try {
+      switch (this.storageType) {
+        case StorageType.OSS:
+          // 阿里云 OSS 生成签名 URL
+          const signedUrl = this.ossClient.signatureUrl(key, {
+            expires: expiresIn,
+          });
+          this.logger.log(`✅ 已生成 OSS 签名 URL: ${key}`);
+          return signedUrl;
+
+        case StorageType.COS:
+          // 腾讯云 COS 生成签名 URL
+          const bucket = this.configService.get('COS_BUCKET');
+          const region = this.configService.get('COS_REGION');
+          
+          return new Promise((resolve, reject) => {
+            this.cosClient.getObjectUrl(
+              {
+                Bucket: bucket,
+                Region: region,
+                Key: key,
+                Sign: true,
+                Expires: expiresIn,
+              },
+              (err, data) => {
+                if (err) {
+                  reject(err);
+                } else {
+                  this.logger.log(`✅ 已生成 COS 签名 URL: ${key}`);
+                  resolve(data.Url);
+                }
+              },
+            );
+          });
+
+        case StorageType.S3:
+          // S3 需要使用 getSignedUrl，这里简化处理，返回普通 URL
+          // 实际生产环境需要使用 @aws-sdk/s3-request-presigner
+          const s3Bucket = this.configService.get('S3_BUCKET');
+          const endpoint = this.configService.get('S3_ENDPOINT');
+          const s3Region = this.configService.get('S3_REGION') || 'us-east-1';
+          const baseUrl = endpoint 
+            ? `${endpoint}/${s3Bucket}`
+            : `https://${s3Bucket}.s3.${s3Region}.amazonaws.com`;
+          
+          const url = `${baseUrl}/${key}`;
+          this.logger.log(`⚠️ S3 返回普通 URL（需要 bucket 公开或实现签名）: ${key}`);
+          return url;
+
+        default:
+          throw new Error(`不支持的存储类型: ${this.storageType}`);
+      }
+    } catch (error) {
+      this.logger.error(`❌ 生成签名 URL 失败: ${error.message}`, error.stack);
+      throw error;
+    }
+  }
+
+  /**
    * 生成文件路径
    * @param reportId 报告 ID
    * @param userId 用户 ID

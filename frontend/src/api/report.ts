@@ -29,11 +29,7 @@ export const reportApi = {
   // 删除报告
   delete: (id: string) => api.delete(`/reports/${id}`),
 
-  // 下载PDF
-  downloadPdf: (id: string) => {
-    return api.get(`/reports/${id}/pdf`, {
-      responseType: 'blob',
-    })
-  },
+  // 获取PDF下载链接
+  getPdfUrl: (id: string) => api.get<{ url: string; fromStorage: boolean }>(`/reports/${id}/pdf`),
 }
 
