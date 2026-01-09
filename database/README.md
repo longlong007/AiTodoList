@@ -6,15 +6,19 @@
 
 ```
 database/
-├── schema.sql              # 数据库表结构定义（包含所有表和 PDF 字段）
-├── seed.sql                # 测试数据（需要先更新密码哈希）
-├── generate-passwords.js   # 密码哈希生成工具
-├── setup-all.sh           # 一键安装脚本 (Linux/Mac) ⭐ 推荐
-├── setup-all.bat          # 一键安装脚本 (Windows) ⭐ 推荐
-├── import.sh              # 分步导入脚本 (Linux/Mac)
-├── import.bat             # 分步导入脚本 (Windows)
-├── add-report-pdf-fields.sql  # PDF 字段迁移脚本（仅用于旧数据库升级）
-└── README.md              # 本文档
+├── schema.sql                 # 数据库表结构定义（包含所有表和 PDF 字段）
+├── seed.sql                   # 测试数据（需要先更新密码哈希）
+├── generate-passwords.js      # 密码哈希生成工具
+├── setup-all.sh              # 一键安装脚本 (Linux/Mac) ⭐ 推荐
+├── setup-all.bat             # 一键安装脚本 (Windows) ⭐ 推荐
+├── import.sh                 # 分步导入脚本 (Linux/Mac)
+├── import.bat                # 分步导入脚本 (Windows)
+├── railway-import.sh         # Railway平台导入脚本 (Linux/Mac) ⭐ Railway部署
+├── railway-import.bat        # Railway平台导入脚本 (Windows) ⭐ Railway部署
+├── add-report-pdf-fields.sql # PDF 字段迁移脚本（仅用于旧数据库升级）
+├── RAILWAY_QUICK_IMPORT.md   # Railway快速导入指南 ⭐ Railway部署
+├── RAILWAY_IMPORT_GUIDE.md   # Railway完整导入指南
+└── README.md                 # 本文档
 ```
 
 ## 🚀 快速开始（一键安装）⭐
@@ -41,6 +45,49 @@ chmod +x setup-all.sh
 - ✅ 显示测试账号信息
 
 ⚠️ **警告**：脚本会删除并重建所有表，现有数据将丢失！
+
+---
+
+## ☁️ Railway 平台部署 ⭐
+
+如果你要将数据库部署到 Railway 平台，请使用以下方法：
+
+### 方法 1：使用 Railway 专用导入脚本（推荐）
+
+**Windows:**
+```cmd
+cd database
+# 1. 编辑 railway-import.bat，填入Railway数据库连接信息
+# 2. 运行脚本
+railway-import.bat
+```
+
+**Linux/Mac:**
+```bash
+cd database
+# 1. 编辑 railway-import.sh，填入Railway数据库连接信息
+chmod +x railway-import.sh
+# 2. 运行脚本
+./railway-import.sh
+```
+
+### 方法 2：使用 Railway CLI（最简单）
+
+```bash
+# 1. 安装并登录 Railway CLI
+railway login
+railway link
+
+# 2. 导入数据
+cd database
+railway run psql -f schema.sql
+railway run psql -f seed.sql
+```
+
+### 📖 详细文档
+
+- 🚀 **快速入门**: [RAILWAY_QUICK_IMPORT.md](./RAILWAY_QUICK_IMPORT.md) - 3种快速导入方法
+- 📚 **完整指南**: [RAILWAY_IMPORT_GUIDE.md](./RAILWAY_IMPORT_GUIDE.md) - 详细步骤和问题排查
 
 ---
 
