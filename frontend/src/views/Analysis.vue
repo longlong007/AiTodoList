@@ -102,9 +102,35 @@ const downloadPdf = async () => {
     console.log('[DEBUG] Got PDF URL response:', data)
     
     if (data.data && data.data.url) {
-      // 在新窗口打开签名URL
-      console.log('[DEBUG] Opening signed URL:', data.data.url.substring(0, 100) + '...')
-      window.open(data.data.url, '_blank')
+      const signedUrl = data.data.url
+      console.log('[DEBUG] Fetching PDF from signed URL:', signedUrl.substring(0, 100) + '...')
+      
+      // 使用fetch下载PDF文件
+      const response = await fetch(signedUrl)
+      if (!response.ok) {
+        throw new Error(`下载失败: ${response.status} ${response.statusText}`)
+      }
+      
+      const blob = await response.blob()
+      console.log('[DEBUG] PDF blob received, size:', blob.size)
+      
+      // 创建Blob URL并触发下载
+      const blobUrl = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = blobUrl
+      link.setAttribute('download', `report-${currentReportId.value}.pdf`)
+      link.style.display = 'none'
+      document.body.appendChild(link)
+      
+      console.log('[DEBUG] Clicking download link')
+      link.click()
+      
+      // 清理
+      setTimeout(() => {
+        document.body.removeChild(link)
+        window.URL.revokeObjectURL(blobUrl)
+        console.log('[DEBUG] Download completed and cleaned up')
+      }, 100)
     } else {
       alert(data.message || 'PDF 尚未生成')
     }
