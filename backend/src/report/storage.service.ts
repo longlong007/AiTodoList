@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as OSS from 'ali-oss';
-import * as COS from 'cos-nodejs-sdk-v5';
+import COS from 'cos-nodejs-sdk-v5';
 import { S3Client, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
 
 export enum StorageType {
@@ -94,14 +94,14 @@ export class StorageService {
           return ossResult.url;
 
         case StorageType.COS:
-          const bucket = this.configService.get('COS_BUCKET');
-          const region = this.configService.get('COS_REGION');
+          const cosBucket = this.configService.get('COS_BUCKET');
+          const cosRegion = this.configService.get('COS_REGION');
           
           return new Promise((resolve, reject) => {
             this.cosClient.putObject(
               {
-                Bucket: bucket,
-                Region: region,
+                Bucket: cosBucket,
+                Region: cosRegion,
                 Key: key,
                 Body: buffer,
                 ContentType: contentType,
@@ -112,7 +112,7 @@ export class StorageService {
                 } else {
                   // 构建访问 URL
                   const baseUrl = this.configService.get('COS_BASE_URL') || 
-                    `https://${bucket}.cos.${region}.myqcloud.com`;
+                    `https://${cosBucket}.cos.${cosRegion}.myqcloud.com`;
                   const url = `${baseUrl}/${key}`;
                   this.logger.log(`✅ 文件已上传到 COS: ${key}`);
                   resolve(url);
@@ -133,10 +133,10 @@ export class StorageService {
           
           // 构建访问 URL
           const endpoint = this.configService.get('S3_ENDPOINT');
-          const region = this.configService.get('S3_REGION') || 'us-east-1';
+          const s3Region = this.configService.get('S3_REGION') || 'us-east-1';
           const baseUrl = endpoint 
             ? `${endpoint}/${s3Bucket}`
-            : `https://${s3Bucket}.s3.${region}.amazonaws.com`;
+            : `https://${s3Bucket}.s3.${s3Region}.amazonaws.com`;
           
           const url = `${baseUrl}/${key}`;
           this.logger.log(`✅ 文件已上传到 S3: ${key}`);

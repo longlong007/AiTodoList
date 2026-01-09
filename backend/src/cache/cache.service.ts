@@ -53,10 +53,11 @@ export class CacheService {
    */
   async delPattern(pattern: string): Promise<void> {
     try {
-      const store: any = this.cacheManager.store;
+      // cache-manager v7+ 使用 stores 数组
+      const store: any = (this.cacheManager as any).store;
       
       // 如果是ioredis，支持pattern删除
-      if (store.client && typeof store.client.keys === 'function') {
+      if (store && store.client && typeof store.client.keys === 'function') {
         const keys = await store.client.keys(pattern);
         if (keys.length > 0) {
           await Promise.all(keys.map((key: string) => this.del(key)));
@@ -72,7 +73,15 @@ export class CacheService {
    */
   async reset(): Promise<void> {
     try {
-      await this.cacheManager.reset();
+      // cache-manager v7 移除了 reset() 方法
+      // 尝试直接访问Redis client执行FLUSHDB
+      const store: any = (this.cacheManager as any).store;
+      
+      if (store && store.client && typeof store.client.flushdb === 'function') {
+        await store.client.flushdb();
+      } else {
+        console.warn('⚠️  缓存清空功能在当前配置下不可用（需要Redis）');
+      }
     } catch (error) {
       console.error('缓存清空失败:', error.message);
     }
@@ -135,9 +144,10 @@ export class CacheService {
    */
   async increment(key: string, ttl: number): Promise<number> {
     try {
-      const store: any = this.cacheManager.store;
+      // cache-manager v7+ 需要通过类型断言访问store
+      const store: any = (this.cacheManager as any).store;
       
-      if (store.client && typeof store.client.incr === 'function') {
+      if (store && store.client && typeof store.client.incr === 'function') {
         const count = await store.client.incr(key);
         if (count === 1) {
           // 第一次设置，添加过期时间
@@ -165,9 +175,10 @@ export class CacheService {
    */
   async acquireLock(key: string, ttl: number = 10): Promise<boolean> {
     try {
-      const store: any = this.cacheManager.store;
+      // cache-manager v7+ 需要通过类型断言访问store
+      const store: any = (this.cacheManager as any).store;
       
-      if (store.client && typeof store.client.set === 'function') {
+      if (store && store.client && typeof store.client.set === 'function') {
         // 使用SETNX实现分布式锁
         const result = await store.client.set(key, '1', 'EX', ttl, 'NX');
         return result === 'OK';
