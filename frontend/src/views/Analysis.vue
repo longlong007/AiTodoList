@@ -94,20 +94,60 @@ const downloadPdf = async () => {
   }
 
   try {
-    const { data } = await reportApi.downloadPdf(currentReportId.value)
+    console.log('[DEBUG] downloadPdf called, reportId:', currentReportId.value)
+    
+    // 先获取报告信息，检查是否有 pdfUrl
+    const reportResponse = await reportApi.getOne(currentReportId.value)
+    const report = reportResponse.data.data
+    
+    console.log('[DEBUG] Report info:', {
+      id: report.id,
+      hasPdfUrl: !!report.pdfUrl,
+      pdfUrl: report.pdfUrl
+    })
+    
+    // 如果有 pdfUrl，直接打开（避免 CORS 和重定向问题）
+    if (report.pdfUrl) {
+      console.log('[DEBUG] Opening pdfUrl directly:', report.pdfUrl)
+      window.open(report.pdfUrl, '_blank')
+      return
+    }
+    
+    // 否则通过 API 实时生成并下载
+    console.log('[DEBUG] Generating PDF via API')
+    const response = await reportApi.downloadPdf(currentReportId.value)
+    console.log('[DEBUG] Response received:', {
+      data: response.data,
+      dataType: typeof response.data,
+      dataSize: response.data?.size,
+      isBlob: response.data instanceof Blob,
+      headers: response.headers,
+      status: response.status
+    })
+    
+    const { data } = response
     
     // 创建下载链接
     const url = window.URL.createObjectURL(new Blob([data]))
+    console.log('[DEBUG] Blob URL created:', url)
     const link = document.createElement('a')
     link.href = url
     link.setAttribute('download', `report-${currentReportId.value}.pdf`)
     document.body.appendChild(link)
+    console.log('[DEBUG] Clicking download link')
     link.click()
     link.remove()
     window.URL.revokeObjectURL(url)
+    console.log('[DEBUG] Download completed')
   } catch (err: any) {
-    console.error('下载PDF失败:', err)
-    alert('下载PDF失败')
+    console.error('[DEBUG] 下载PDF失败 - 完整错误:', err)
+    console.error('[DEBUG] 错误详情:', {
+      message: err.message,
+      response: err.response,
+      status: err.response?.status,
+      data: err.response?.data
+    })
+    alert('下载PDF失败: ' + (err.message || '未知错误'))
   }
 }
 
