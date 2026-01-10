@@ -28,15 +28,23 @@ export class CacheService {
    */
   async set<T>(key: string, value: T, ttl?: number): Promise<void> {
     try {
+      const ttlSeconds = ttl || 1800;
+      // cache-manager v5+ 使用毫秒作为TTL单位
+      const ttlMs = ttlSeconds * 1000;
+      
       if (ttl === 0) {
         // 永不过期
         await this.cacheManager.set(key, value, 0);
       } else {
-        await this.cacheManager.set(key, value, ttl || 1800);
+        await this.cacheManager.set(key, value, ttlMs);
       }
-      console.log(`[CacheService] SET ${key} = ${JSON.stringify(value)}, TTL: ${ttl || 1800}秒`);
+      console.log(`[CacheService] SET ${key} = ${JSON.stringify(value)}, TTL: ${ttlSeconds}秒 (${ttlMs}ms)`);
+      
+      // 立即验证存储
+      const verify = await this.cacheManager.get(key);
+      console.log(`[CacheService] VERIFY ${key} => ${JSON.stringify(verify)}`);
     } catch (error) {
-      console.error(`缓存设置失败 [${key}]:`, error.message);
+      console.error(`缓存设置失败 [${key}]:`, error.message, error.stack);
     }
   }
 

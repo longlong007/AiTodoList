@@ -17,8 +17,8 @@ import { CacheService } from './cache.service';
         if (!redisUrl) {
           console.warn('⚠️  未配置REDIS_URL，使用内存缓存（不推荐用于生产环境）');
           return {
-            ttl: 1800, // 默认30分钟
-            max: 100, // 最多缓存100项
+            ttl: 1800000, // 30分钟，使用毫秒
+            max: 1000, // 增加到1000项
           };
         }
 
@@ -55,8 +55,8 @@ import { CacheService } from './cache.service';
           console.error('❌ Redis URL解析失败:', error.message);
           console.warn('⚠️  降级使用内存缓存');
           return {
-            ttl: 1800,
-            max: 100,
+            ttl: 1800000, // 30分钟，使用毫秒
+            max: 1000,
           };
         }
       },
