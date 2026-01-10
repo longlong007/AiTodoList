@@ -13,7 +13,7 @@ try {
 @Injectable()
 export class SmsService {
   private readonly logger = new Logger(SmsService.name);
-  private smsClient: SMSClient;
+  private smsClient: any; // 使用 any 类型以兼容动态导入
   private readonly accessKeyId: string;
   private readonly accessKeySecret: string;
   private readonly signName: string;
