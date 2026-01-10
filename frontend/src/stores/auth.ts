@@ -135,6 +135,7 @@ export const useAuthStore = defineStore('auth', () => {
     token,
     user,
     isAuthenticated,
+    setAuth,
     loginWithEmail,
     loginWithPhone,
     loginWithWechat,

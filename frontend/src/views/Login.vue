@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { authApi } from '@/api/auth'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -9,13 +10,59 @@ const authStore = useAuthStore()
 const loginType = ref<'email' | 'phone' | 'wechat'>('email')
 const identifier = ref('')
 const password = ref('')
+const code = ref('')
+const useCodeLogin = ref(false)
 const loading = ref(false)
 const error = ref('')
+const countdown = ref(0)
+const sendingCode = ref(false)
+
+const handleSendCode = async () => {
+  if (!identifier.value) {
+    error.value = '请先输入手机号'
+    return
+  }
+
+  const phoneRegex = /^1[3-9]\d{9}$/
+  if (!phoneRegex.test(identifier.value)) {
+    error.value = '手机号格式不正确'
+    return
+  }
+
+  if (countdown.value > 0) {
+    return
+  }
+
+  sendingCode.value = true
+  error.value = ''
+
+  try {
+    await authApi.sendSmsCode(identifier.value, 'login')
+    countdown.value = 60
+    const timer = setInterval(() => {
+      countdown.value--
+      if (countdown.value <= 0) {
+        clearInterval(timer)
+      }
+    }, 1000)
+  } catch (err: any) {
+    error.value = err.response?.data?.message || '验证码发送失败'
+  } finally {
+    sendingCode.value = false
+  }
+}
 
 const handleLogin = async () => {
-  if (!identifier.value || !password.value) {
-    error.value = '请填写完整信息'
-    return
+  if (loginType.value === 'phone' && useCodeLogin.value) {
+    if (!identifier.value || !code.value) {
+      error.value = '请填写手机号和验证码'
+      return
+    }
+  } else {
+    if (!identifier.value || !password.value) {
+      error.value = '请填写完整信息'
+      return
+    }
   }
 
   loading.value = true
@@ -25,7 +72,12 @@ const handleLogin = async () => {
     if (loginType.value === 'email') {
       await authStore.loginWithEmail(identifier.value, password.value)
     } else if (loginType.value === 'phone') {
-      await authStore.loginWithPhone(identifier.value, password.value)
+      if (useCodeLogin.value) {
+        const { data } = await authApi.loginWithPhone(identifier.value, undefined, code.value)
+        authStore.setAuth(data.access_token, data.user)
+      } else {
+        await authStore.loginWithPhone(identifier.value, password.value)
+      }
     }
     router.push('/todos')
   } catch (err: any) {
@@ -116,13 +168,46 @@ const getPlaceholder = () => {
             class="input-field"
           />
         </div>
-        <div>
+
+        <!-- 手机登录时显示登录方式切换 -->
+        <div v-if="loginType === 'phone'" class="flex items-center gap-2">
+          <label class="flex items-center gap-2 text-sm text-gray-400 cursor-pointer">
+            <input
+              v-model="useCodeLogin"
+              type="checkbox"
+              class="w-4 h-4 rounded border-gray-600 bg-white/5 text-primary-500 focus:ring-2 focus:ring-primary-500 focus:ring-offset-0"
+            />
+            <span>使用验证码登录</span>
+          </label>
+        </div>
+
+        <!-- 密码输入（非验证码登录时显示） -->
+        <div v-if="loginType !== 'phone' || !useCodeLogin">
           <input
             v-model="password"
             type="password"
             placeholder="请输入密码"
             class="input-field"
           />
+        </div>
+
+        <!-- 验证码输入（手机号+验证码登录时显示） -->
+        <div v-if="loginType === 'phone' && useCodeLogin" class="flex gap-2">
+          <input
+            v-model="code"
+            type="text"
+            placeholder="请输入6位验证码"
+            maxlength="6"
+            class="input-field flex-1"
+          />
+          <button
+            type="button"
+            @click="handleSendCode"
+            :disabled="countdown > 0 || sendingCode"
+            class="px-4 py-2 bg-primary-500/20 hover:bg-primary-500/30 text-primary-400 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap text-sm font-medium"
+          >
+            {{ countdown > 0 ? `${countdown}秒` : (sendingCode ? '发送中...' : '获取验证码') }}
+          </button>
         </div>
 
         <!-- Error Message -->

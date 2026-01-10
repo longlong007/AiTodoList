@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { authApi } from '@/api/auth'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -10,12 +11,55 @@ const registerType = ref<'email' | 'phone'>('email')
 const identifier = ref('')
 const password = ref('')
 const confirmPassword = ref('')
+const code = ref('')
 const loading = ref(false)
 const error = ref('')
+const countdown = ref(0)
+const sendingCode = ref(false)
+
+const handleSendCode = async () => {
+  if (!identifier.value) {
+    error.value = '请先输入手机号'
+    return
+  }
+
+  const phoneRegex = /^1[3-9]\d{9}$/
+  if (!phoneRegex.test(identifier.value)) {
+    error.value = '手机号格式不正确'
+    return
+  }
+
+  if (countdown.value > 0) {
+    return
+  }
+
+  sendingCode.value = true
+  error.value = ''
+
+  try {
+    await authApi.sendSmsCode(identifier.value, 'register')
+    countdown.value = 60
+    const timer = setInterval(() => {
+      countdown.value--
+      if (countdown.value <= 0) {
+        clearInterval(timer)
+      }
+    }, 1000)
+  } catch (err: any) {
+    error.value = err.response?.data?.message || '验证码发送失败'
+  } finally {
+    sendingCode.value = false
+  }
+}
 
 const handleRegister = async () => {
   if (!identifier.value || !password.value || !confirmPassword.value) {
     error.value = '请填写完整信息'
+    return
+  }
+
+  if (registerType.value === 'phone' && !code.value) {
+    error.value = '请填写验证码'
     return
   }
 
@@ -36,7 +80,8 @@ const handleRegister = async () => {
     if (registerType.value === 'email') {
       await authStore.registerWithEmail(identifier.value, password.value)
     } else {
-      await authStore.registerWithPhone(identifier.value, password.value)
+      const { data } = await authApi.registerWithPhone(identifier.value, password.value, code.value)
+      authStore.setAuth(data.access_token, data.user)
     }
     router.push('/todos')
   } catch (err: any) {
@@ -100,6 +145,26 @@ const getPlaceholder = () => {
             class="input-field"
           />
         </div>
+
+        <!-- 手机号注册时显示验证码输入 -->
+        <div v-if="registerType === 'phone'" class="flex gap-2">
+          <input
+            v-model="code"
+            type="text"
+            placeholder="请输入6位验证码"
+            maxlength="6"
+            class="input-field flex-1"
+          />
+          <button
+            type="button"
+            @click="handleSendCode"
+            :disabled="countdown > 0 || sendingCode"
+            class="px-4 py-2 bg-primary-500/20 hover:bg-primary-500/30 text-primary-400 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap text-sm font-medium"
+          >
+            {{ countdown > 0 ? `${countdown}秒` : (sendingCode ? '发送中...' : '获取验证码') }}
+          </button>
+        </div>
+
         <div>
           <input
             v-model="password"
