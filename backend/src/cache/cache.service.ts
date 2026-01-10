@@ -11,7 +11,9 @@ export class CacheService {
    */
   async get<T>(key: string): Promise<T | undefined> {
     try {
-      return await this.cacheManager.get<T>(key);
+      const value = await this.cacheManager.get<T>(key);
+      console.log(`[CacheService] GET ${key} => ${JSON.stringify(value)}`);
+      return value;
     } catch (error) {
       console.error(`缓存获取失败 [${key}]:`, error.message);
       return undefined;
@@ -32,6 +34,7 @@ export class CacheService {
       } else {
         await this.cacheManager.set(key, value, ttl || 1800);
       }
+      console.log(`[CacheService] SET ${key} = ${JSON.stringify(value)}, TTL: ${ttl || 1800}秒`);
     } catch (error) {
       console.error(`缓存设置失败 [${key}]:`, error.message);
     }

@@ -92,10 +92,15 @@ export class SmsService {
     // 如果是开发环境且未配置短信服务，使用模拟模式
     if (!this.smsClient || process.env.NODE_ENV === 'development') {
       this.logger.warn(`[模拟模式] 手机号 ${phone} 的${type === 'register' ? '注册' : '登录'}验证码: ${code}`);
+      this.logger.debug(`存储验证码到缓存，键: ${codeKey}, 值: ${code}, TTL: 300秒`);
       // 存储验证码（5分钟有效）
       await this.cacheService.set(codeKey, code, 300);
       // 记录发送时间
       await this.cacheService.set(rateLimitKey, Date.now(), 60);
+      
+      // 验证存储是否成功
+      const storedCode = await this.cacheService.get<string>(codeKey);
+      this.logger.debug(`验证存储结果，从缓存读取到: ${storedCode}`);
       return;
     }
 
@@ -150,7 +155,9 @@ export class SmsService {
     }
 
     const codeKey = this.getCodeKey(phone, type);
+    this.logger.debug(`验证验证码，键: ${codeKey}, 提供的验证码: ${code}`);
     const cachedCode = await this.cacheService.get<string>(codeKey);
+    this.logger.debug(`从缓存读取到的验证码: ${cachedCode}`);
 
     if (!cachedCode) {
       throw new BadRequestException('验证码已过期，请重新获取');
