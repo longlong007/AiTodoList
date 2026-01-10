@@ -73,7 +73,7 @@ const handleLogin = async () => {
       await authStore.loginWithEmail(identifier.value, password.value)
     } else if (loginType.value === 'phone') {
       if (useCodeLogin.value) {
-        const { data } = await authApi.loginWithPhone(identifier.value, undefined, code.value)
+        const { data } = await authApi.loginWithPhone(identifier.value, '', code.value)
         authStore.setAuth(data.access_token, data.user)
       } else {
         await authStore.loginWithPhone(identifier.value, password.value)
