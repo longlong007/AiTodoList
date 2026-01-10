@@ -20,7 +20,7 @@ export class LoginDto {
   identifier: string;
 
   @IsString()
-  @IsNotEmpty({ message: '密码不能为空' })
+  @IsOptional()
   password: string;
 
   @IsString()
