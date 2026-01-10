@@ -15,8 +15,17 @@ export const authApi = {
     api.post<AuthResponse>('/auth/login/email', { identifier: email, password }),
 
   // 手机号登录（支持密码或验证码登录）
-  loginWithPhone: (phone: string, password?: string, code?: string) =>
-    api.post<AuthResponse>('/auth/login/phone', { identifier: phone, password, code }),
+  loginWithPhone: (phone: string, password?: string, code?: string) => {
+    const payload: any = { identifier: phone }
+    if (code) {
+      // 验证码登录，不传password
+      payload.code = code
+    } else if (password) {
+      // 密码登录
+      payload.password = password
+    }
+    return api.post<AuthResponse>('/auth/login/phone', payload)
+  },
 
   // 微信登录
   loginWithWechat: (code: string) =>
