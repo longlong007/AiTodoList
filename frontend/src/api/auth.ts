@@ -6,21 +6,29 @@ export const authApi = {
   registerWithEmail: (email: string, password: string) =>
     api.post<AuthResponse>('/auth/register/email', { identifier: email, password }),
 
-  // 手机号注册
-  registerWithPhone: (phone: string, password: string) =>
-    api.post<AuthResponse>('/auth/register/phone', { identifier: phone, password }),
+  // 手机号注册（支持验证码）
+  registerWithPhone: (phone: string, password: string, code?: string) =>
+    api.post<AuthResponse>('/auth/register/phone', { identifier: phone, password, code }),
 
   // 邮箱登录
   loginWithEmail: (email: string, password: string) =>
     api.post<AuthResponse>('/auth/login/email', { identifier: email, password }),
 
-  // 手机号登录
-  loginWithPhone: (phone: string, password: string) =>
-    api.post<AuthResponse>('/auth/login/phone', { identifier: phone, password }),
+  // 手机号登录（支持密码或验证码登录）
+  loginWithPhone: (phone: string, password?: string, code?: string) =>
+    api.post<AuthResponse>('/auth/login/phone', { identifier: phone, password, code }),
 
   // 微信登录
   loginWithWechat: (code: string) =>
     api.post<AuthResponse>('/auth/login/wechat', { code }),
+
+  // 发送短信验证码
+  sendSmsCode: (phone: string, type: 'register' | 'login') =>
+    api.post('/auth/sms/send', { phone, type }),
+
+  // 验证短信验证码
+  verifySmsCode: (phone: string, code: string, type: 'register' | 'login') =>
+    api.post('/auth/sms/verify', { phone, code, type }),
 
   // 获取当前用户信息
   getCurrentUser: () =>

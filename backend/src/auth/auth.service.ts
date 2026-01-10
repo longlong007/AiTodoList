@@ -90,6 +90,22 @@ export class AuthService {
     return this.login(user);
   }
 
+  /**
+   * 使用验证码登录（免密登录）
+   */
+  async loginWithPhoneCode(phone: string) {
+    if (!this.isValidPhone(phone)) {
+      throw new BadRequestException('手机号格式不正确');
+    }
+
+    const user = await this.userService.findByPhone(phone);
+    if (!user) {
+      throw new UnauthorizedException('用户不存在，请先注册');
+    }
+
+    return this.login(user);
+  }
+
   async loginWithWechat(code: string) {
     // 这里需要调用微信API获取openId
     // 实际项目中需要配置微信开放平台

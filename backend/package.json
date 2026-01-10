@@ -15,6 +15,7 @@
     "download-font": "node scripts/download-chinese-font.js"
   },
   "dependencies": {
+    "@alicloud/sms-sdk": "^1.1.6",
     "@aws-sdk/client-s3": "^3.964.0",
     "@nestjs/cache-manager": "^3.1.0",
     "@nestjs/common": "^10.3.0",
