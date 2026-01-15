@@ -3,7 +3,7 @@ export type Urgency = 1 | 2 | 3 | 4 | 5
 export type TodoStatus = 'pending' | 'in_progress' | 'completed' | 'cancelled'
 export type LoginType = 'phone' | 'email' | 'wechat'
 export type AccountType = 'free' | 'pro'
-export type PaymentMethod = 'alipay' | 'wechat'
+export type PaymentMethod = 'alipay' | 'wechat' | 'stripe'
 export type PlanType = 'monthly' | 'quarterly' | 'yearly'
 export type OrderStatus = 'pending' | 'paid' | 'failed' | 'refunded' | 'cancelled'
 
@@ -17,6 +17,9 @@ export interface User {
   accountType: AccountType
   isPro: boolean
   subscriptionExpireAt?: string
+  subscriptionStatus?: string
+  stripeCustomerId?: string
+  stripeSubscriptionId?: string
 }
 
 export interface Plan {

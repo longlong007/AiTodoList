@@ -1,13 +1,22 @@
-import { Controller, Get, Post, Body, Param, Query, UseGuards, Request, Res, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Query, UseGuards, Request, Res, BadRequestException, HttpCode, HttpStatus, RawBodyRequest, Headers } from '@nestjs/common';
 import { Response } from 'express';
+import { Request as ExpressRequest } from 'express';
+import { ConfigService } from '@nestjs/config';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RateLimitGuard, RateLimit } from '../common/guards/rate-limit.guard';
 import { PaymentService } from './payment.service';
+import { StripeService } from './stripe.service';
 import { CreateOrderDto } from './dto/payment.dto';
+import { UserService } from '../user/user.service';
 
 @Controller('payment')
 export class PaymentController {
-  constructor(private paymentService: PaymentService) {}
+  constructor(
+    private paymentService: PaymentService,
+    private stripeService: StripeService,
+    private configService: ConfigService,
+    private userService: UserService,
+  ) {}
 
   // 获取套餐列表（公开）
   @Get('plans')
@@ -241,6 +250,153 @@ export class PaymentController {
     // 实际需要验证签名
     const success = await this.paymentService.handleWechatCallback(body);
     return success ? '<xml><return_code>SUCCESS</return_code></xml>' : '<xml><return_code>FAIL</return_code></xml>';
+  }
+
+  // ==================== Stripe 支付接口 ====================
+
+  /**
+   * 创建 Stripe 订阅 Checkout Session
+   */
+  @Post('stripe/subscription')
+  @UseGuards(JwtAuthGuard, RateLimitGuard)
+  @RateLimit(5, 60)
+  async createStripeSubscription(
+    @Request() req,
+    @Body() body: { planType: string; mode: 'subscription' | 'payment' },
+  ) {
+    const { planType, mode } = body;
+
+    if (!this.stripeService.isConfigured()) {
+      throw new BadRequestException('Stripe 支付未配置，请联系管理员');
+    }
+
+    // 获取前端域名
+    const frontendUrl = this.configService.get('FRONTEND_URL') || 'http://localhost:5173';
+
+    let result;
+    if (mode === 'subscription') {
+      result = await this.stripeService.createSubscriptionCheckout(
+        req.user.userId,
+        planType as any,
+        `${frontendUrl}/payment/success`,
+        `${frontendUrl}/pricing`,
+      );
+    } else {
+      result = await this.stripeService.createOneTimePayment(
+        req.user.userId,
+        planType as any,
+        `${frontendUrl}/payment/success`,
+        `${frontendUrl}/pricing`,
+      );
+    }
+
+    return {
+      sessionId: result.sessionId,
+      checkoutUrl: result.checkoutUrl,
+    };
+  }
+
+  /**
+   * 验证 Stripe Checkout Session 状态
+   */
+  @Get('stripe/verify/:sessionId')
+  @UseGuards(JwtAuthGuard)
+  async verifyStripeSession(
+    @Request() req,
+    @Param('sessionId') sessionId: string,
+  ) {
+    if (!this.stripeService.isConfigured()) {
+      throw new BadRequestException('Stripe 支付未配置，请联系管理员');
+    }
+
+    try {
+      const session = await this.stripeService.verifySession(sessionId);
+
+      // 验证 session 属于当前用户
+      const orderNo = session.metadata?.orderNo;
+      if (orderNo) {
+        const order = await this.paymentService.findOrderByNo(orderNo);
+        if (!order || order.userId !== req.user.userId) {
+          return { error: '无权访问此订单' };
+        }
+      }
+
+      return {
+        status: session.payment_status,
+        customerEmail: session.customer_details?.email,
+        amountTotal: session.amount_total,
+        currency: session.currency,
+        mode: session.mode,
+        subscriptionStatus: (session.subscription as any)?.status,
+      };
+    } catch (error: any) {
+      return { error: error.message || '验证失败' };
+    }
+  }
+
+  /**
+   * 创建 Stripe Billing Portal Session（管理订阅）
+   */
+  @Post('stripe/portal')
+  @UseGuards(JwtAuthGuard)
+  async createStripePortalSession(@Request() req) {
+    if (!this.stripeService.isConfigured()) {
+      throw new BadRequestException('Stripe 支付未配置，请联系管理员');
+    }
+
+    // 获取用户的 Stripe Customer ID
+    const user = await this.userService.findById(req.user.userId);
+    if (!user?.stripeCustomerId) {
+      throw new BadRequestException('未找到 Stripe 账户信息');
+    }
+
+    const frontendUrl = this.configService.get('FRONTEND_URL') || 'http://localhost:5173';
+    const portalUrl = await this.stripeService.createPortalSession(
+      user.stripeCustomerId,
+      `${frontendUrl}/pricing`,
+    );
+
+    return { url: portalUrl };
+  }
+
+  /**
+   * 获取 Stripe 配置状态
+   */
+  @Get('stripe/status')
+  @UseGuards(JwtAuthGuard)
+  getStripeStatus() {
+    return {
+      configured: this.stripeService.isConfigured(),
+      supportedMethods: ['stripe'],
+    };
+  }
+
+  /**
+   * 取消 Stripe 订阅
+   */
+  @Post('stripe/cancel-subscription')
+  @UseGuards(JwtAuthGuard)
+  async cancelStripeSubscription(@Request() req) {
+    if (!this.stripeService.isConfigured()) {
+      throw new BadRequestException('Stripe 支付未配置，请联系管理员');
+    }
+
+    const user = await this.userService.findById(req.user.userId);
+    if (!user?.stripeSubscriptionId) {
+      throw new BadRequestException('没有正在进行的订阅');
+    }
+
+    // 设置为周期结束时取消（保留剩余时间）
+    const subscription = await this.stripeService.cancelSubscription(
+      user.stripeSubscriptionId,
+      false, // 不立即取消
+    );
+
+    return {
+      success: true,
+      cancelAt: new Date(subscription.cancel_at * 1000).toISOString(),
+      message: '订阅将在当前计费周期结束时取消',
+    };
   }
 }
 

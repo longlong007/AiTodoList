@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { paymentApi } from '@/api/payment'
 import type { Plan, PaymentMethod, PlanType } from '@/types'
 
 const router = useRouter()
+const route = useRoute()
 const authStore = useAuthStore()
 
 const plans = ref<Plan[]>([])
@@ -14,6 +15,21 @@ const selectedPlan = ref<PlanType | null>(null)
 const selectedPayment = ref<PaymentMethod>('alipay')
 const showPaymentModal = ref(false)
 const paying = ref(false)
+const stripeConfigured = ref(false)
+const stripeLoading = ref(true)
+
+// 检查 Stripe 是否已配置
+const checkStripeStatus = async () => {
+  try {
+    const { data } = await paymentApi.getStripeStatus()
+    stripeConfigured.value = data.configured
+  } catch (e) {
+    console.error('检查 Stripe 状态失败:', e)
+    stripeConfigured.value = false
+  } finally {
+    stripeLoading.value = false
+  }
+}
 
 const isPro = computed(() => authStore.user?.isPro)
 
@@ -55,8 +71,36 @@ const handlePaymentSuccess = async () => {
   }
 }
 
+const handleStripePay = async () => {
+  if (!selectedPlan.value) return
+  
+  paying.value = true
+  try {
+    const mode = selectedPayment.value === 'stripe' ? 'subscription' : 'payment'
+    const { data } = await paymentApi.createStripeSubscription(selectedPlan.value, mode)
+    
+    console.log('Stripe Checkout 创建成功:', data)
+    
+    // 打开 Stripe Checkout 页面
+    if (data.checkoutUrl) {
+      window.location.href = data.checkoutUrl
+    }
+  } catch (error: any) {
+    console.error('创建 Stripe 支付失败:', error)
+    alert(error.response?.data?.message || '创建支付失败，请重试')
+  } finally {
+    paying.value = false
+  }
+}
+
 const handlePay = async () => {
   if (!selectedPlan.value) return
+  
+  // Stripe 支付走独立流程
+  if (selectedPayment.value === 'stripe') {
+    await handleStripePay()
+    return
+  }
   
   paying.value = true
   try {
@@ -166,8 +210,35 @@ const formatExpireDate = (date?: string) => {
   })
 }
 
-onMounted(() => {
-  fetchPlans()
+// 处理支付成功页面回调
+const handlePaymentSuccessCallback = async () => {
+  const sessionId = route.query.session_id as string
+  if (sessionId) {
+    console.log('Stripe 支付回调，sessionId:', sessionId)
+    try {
+      const { data } = await paymentApi.verifyStripeSession(sessionId)
+      console.log('Stripe Session 验证结果:', data)
+      
+      if (data.status === 'paid' || data.subscriptionStatus === 'active') {
+        await handlePaymentSuccess()
+      } else {
+        alert('支付状态: ' + data.status)
+      }
+    } catch (error: any) {
+      console.error('验证 Stripe 支付失败:', error)
+      alert('支付验证失败，请联系客服')
+    }
+  }
+}
+
+onMounted(async () => {
+  await fetchPlans()
+  await checkStripeStatus()
+  
+  // 检查是否是支付成功回调
+  if (route.query.session_id) {
+    await handlePaymentSuccessCallback()
+  }
 })
 </script>
 

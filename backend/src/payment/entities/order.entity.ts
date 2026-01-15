@@ -4,6 +4,7 @@ import { User } from '../../user/entities/user.entity';
 export enum PaymentMethod {
   ALIPAY = 'alipay',
   WECHAT = 'wechat',
+  STRIPE = 'stripe',
 }
 
 export enum OrderStatus {
@@ -87,6 +88,16 @@ export class Order {
   // 支付二维码/链接（临时存储）
   @Column({ type: 'text', nullable: true })
   payUrl: string;
+
+  // Stripe 相关字段
+  @Column({ nullable: true })
+  stripeCustomerId: string;
+
+  @Column({ nullable: true })
+  stripeSubscriptionId: string;
+
+  @Column({ nullable: true })
+  stripeSessionId: string;
 
   @CreateDateColumn()
   createdAt: Date;

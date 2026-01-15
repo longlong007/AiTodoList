@@ -4,6 +4,8 @@ import { ConfigModule } from '@nestjs/config';
 import { Order } from './entities/order.entity';
 import { PaymentService } from './payment.service';
 import { PaymentController } from './payment.controller';
+import { StripeWebhookController } from './stripe-webhook.controller';
+import { StripeService } from './stripe.service';
 import { UserModule } from '../user/user.module';
 
 @Module({
@@ -12,9 +14,9 @@ import { UserModule } from '../user/user.module';
     ConfigModule,
     UserModule,
   ],
-  providers: [PaymentService],
-  controllers: [PaymentController],
-  exports: [PaymentService],
+  providers: [PaymentService, StripeService],
+  controllers: [PaymentController, StripeWebhookController],
+  exports: [PaymentService, StripeService],
 })
 export class PaymentModule {}
 

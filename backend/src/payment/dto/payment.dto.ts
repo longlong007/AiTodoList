@@ -1,4 +1,4 @@
-import { IsEnum, IsNotEmpty } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { PaymentMethod, PlanType } from '../entities/order.entity';
 
 export class CreateOrderDto {
@@ -9,6 +9,16 @@ export class CreateOrderDto {
   @IsEnum(PaymentMethod, { message: '支付方式不正确' })
   @IsNotEmpty({ message: '请选择支付方式' })
   paymentMethod: PaymentMethod;
+}
+
+export class CreateStripeSubscriptionDto {
+  @IsEnum(PlanType, { message: '套餐类型不正确' })
+  @IsNotEmpty({ message: '请选择套餐' })
+  planType: PlanType;
+
+  @IsString()
+  @IsOptional()
+  mode?: 'subscription' | 'payment';
 }
 
 export class PaymentCallbackDto {
