@@ -7,8 +7,7 @@ async function bootstrap() {
   
   // 启用CORS - 允许前端跨域访问
   const allowedOrigins = [
-    'http://localhost:5173',  // 本地开发
-    'http://localhost:3001',
+    'http://localhost:3000',
   ];
   
   // 添加配置的前端域名

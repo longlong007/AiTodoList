@@ -12,7 +12,6 @@ export class CacheService {
   async get<T>(key: string): Promise<T | undefined> {
     try {
       const value = await this.cacheManager.get<T>(key);
-      console.log(`[CacheService] GET ${key} => ${JSON.stringify(value)}`);
       return value;
     } catch (error) {
       console.error(`缓存获取失败 [${key}]:`, error.message);
@@ -38,11 +37,9 @@ export class CacheService {
       } else {
         await this.cacheManager.set(key, value, ttlMs);
       }
-      console.log(`[CacheService] SET ${key} = ${JSON.stringify(value)}, TTL: ${ttlSeconds}秒 (${ttlMs}ms)`);
       
       // 立即验证存储
       const verify = await this.cacheManager.get(key);
-      console.log(`[CacheService] VERIFY ${key} => ${JSON.stringify(verify)}`);
     } catch (error) {
       console.error(`缓存设置失败 [${key}]:`, error.message, error.stack);
     }
