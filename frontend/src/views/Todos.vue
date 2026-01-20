@@ -17,13 +17,19 @@ const filterStatus = ref<string>('')
 const filterImportance = ref<string>('')
 const sortBy = ref('priority')
 
+// Helper function to get today's date in YYYY-MM-DD format
+const getTodayDate = () => {
+  const today = new Date()
+  return today.toISOString().split('T')[0]
+}
+
 // Form state
 const newTodo = ref<CreateTodoDto>({
   title: '',
   description: '',
   importance: 'C',
   urgency: 3,
-  dueDate: '',
+  dueDate: getTodayDate(),
 })
 
 // Computed
@@ -43,7 +49,7 @@ const handleAddTodo = async () => {
   
   await todoStore.createTodo(newTodo.value)
   showAddModal.value = false
-  newTodo.value = { title: '', description: '', importance: 'C', urgency: 3, dueDate: '' }
+  newTodo.value = { title: '', description: '', importance: 'C', urgency: 3, dueDate: getTodayDate() }
 }
 
 const handleEditTodo = async () => {
